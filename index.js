@@ -11,13 +11,13 @@ const dotenv = require("dotenv")
 // const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { json } = require('react-router-dom');
-const connection = mysql.createConnection({
-    host: process.env.DB_USERNAME,
-    user: process.env.DB_PASSWORD,
-    database: process.env.DB_HOST,
-    password: process.env.DB_DATABASE
-});
-
+// const connection = mysql.createConnection({
+//     host: process.env.DB_USERNAME,
+//     user: process.env.DB_PASSWORD,
+//     database: process.env.DB_HOST,
+//     password: process.env.DB_DATABASE
+// });
+process.env.ACCESS_TOKEN_SECRET = 'doraemon';
 
 app.get('/', (req, res) => res.send('Hello World'))
 app.listen(PORT, () => {
