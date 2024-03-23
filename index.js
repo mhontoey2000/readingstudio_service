@@ -18,6 +18,7 @@ const { json } = require('react-router-dom');
 //     password: process.env.DB_DATABASE
 // });
 process.env.ACCESS_TOKEN_SECRET = 'doraemon';
+dotenv.config()
 
 app.get('/', (req, res) => res.send('Hello World'))
 app.listen(PORT, () => {
