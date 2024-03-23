@@ -9,4 +9,4 @@ app.listen(PORT, () => {
     console.log(`Server is running on port : ${PORT}`)
 })
 // const helper = require('./upload');
-// const sendMail = require('./sendmail');
+const sendMail = require('./sendmail');
