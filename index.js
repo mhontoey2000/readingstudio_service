@@ -4,7 +4,8 @@ const PORT = process.env.PORT || 8080
 const cors = require('cors')
 const helper = require('./upload');
 const sendMail = require('./sendmail');
-// const multer = require('multer');
+const multer = require('multer');
+const bodyParser = require('body-parser')
 
 app.get('/', (req, res) => res.send('Hello World'))
 app.listen(PORT, () => {
