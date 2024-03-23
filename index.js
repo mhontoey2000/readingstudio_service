@@ -43,9 +43,6 @@ function generateAccessToken(user) {
 
   app.use(cors());
   app.use(express.json());
-  app.get('/', (req, res) => {
-    res.json({ message: 'Ahoy!' });
-  });
   
   app.get('/api/key', function (req, res) {
     res.json({ key: process.env.PASS_KEY });
@@ -77,7 +74,9 @@ app.get('/posts', (req, res) => {
 app.get('/', (req, res) => {
     res.send('Api is running.')
 })
-
+app.get('/api/test', (req, res) => {
+    res.send('Api is test running.')
+})
 app.listen(process.env.PORT || 3000, () => console.log("Server is running."))
 
 
