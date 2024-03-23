@@ -6,6 +6,8 @@ const helper = require('./upload');
 const sendMail = require('./sendmail');
 const multer = require('multer');
 const bodyParser = require('body-parser')
+const mysql = require('mysql2');
+const dotenv = require("dotenv")
 
 app.get('/', (req, res) => res.send('Hello World'))
 app.listen(PORT, () => {
