@@ -8,6 +8,8 @@ const multer = require('multer');
 const bodyParser = require('body-parser')
 const mysql = require('mysql2');
 const dotenv = require("dotenv")
+const bcrypt = require('bcrypt');
+
 
 app.get('/', (req, res) => res.send('Hello World'))
 app.listen(PORT, () => {
