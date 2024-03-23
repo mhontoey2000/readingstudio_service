@@ -54,7 +54,7 @@ app.use(express.json());
 //     }
 //   });
 
-const router = require('express-promise-router')()
+// const router = require('express-promise-router')()
 app.get('/posts', (req, res) => {
     res.json(posts)
 })
@@ -64,7 +64,7 @@ app.get('/', (req, res) => {
 })
 
 app.listen(process.env.PORT || 3000, () => console.log("Server is running."))
-
+/*
 router.get('/tbl',async (req,res,next) => {
     try {
         connect.query('SELECT * FROM book',(err,rows) => {
@@ -2056,3 +2056,4 @@ app.post('/api/examhistory', upload.none(), (req, res) => {
   //  res.status(200).json({ message: 'Data received successfully' });
 // });
 
+*/
