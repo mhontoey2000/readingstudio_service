@@ -12,20 +12,20 @@ const dotenv = require("dotenv")
 const jwt = require('jsonwebtoken');
 const { json } = require('react-router-dom');
 const router = require('express-promise-router')()
-// const connection = mysql.createConnection({
-//     host: process.env.DB_USERNAME,
-//     user: process.env.DB_PASSWORD,
-//     database: process.env.DB_HOST,
-//     password: process.env.DB_DATABASE
-// });
-// connection.connect((err) => {
-//     if (!!err) {
-//         console.log(err);
-//     } else {
-//         console.log('Connected...');
-//     }
+const connection = mysql.createConnection({
+    host: process.env.DB_USERNAME,
+    user: process.env.DB_PASSWORD,
+    database: process.env.DB_HOST,
+    password: process.env.DB_DATABASE
+});
+connection.connect((err) => {
+    if (!!err) {
+        console.log(err);
+    } else {
+        console.log('Connected...');
+    }
   
-//   });
+  });
 
 process.env.ACCESS_TOKEN_SECRET = 'doraemon';
 dotenv.config()
