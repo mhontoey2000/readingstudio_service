@@ -8,7 +8,7 @@ const bodyParser = require('body-parser')
 const mysql = require('mysql2');
 const dotenv = require("dotenv")
 dotenv.config() // ถ้าจะใช้ ตัวแปรในไฟล์ .env ต้องเอา dotenv.config() อยู่เหนือ process.env เพราะจะเรียกใช้ได้
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 8080
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { json } = require('react-router-dom');
