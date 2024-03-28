@@ -635,7 +635,7 @@ app.post('/api/articledetail/:id/record-history', (req, res) => {
 
  app.get('/api/exam', function (req, res) {
    connection.query(
-       `SELECT * FROM exam`,
+       `SELECT * FROM exams`,
        function(err, results) {
          console.log(res.json(results));
        }
