@@ -66,7 +66,7 @@ app.use(express.urlencoded({extended: true ,limit: '1000mb'}));
 app.use(bodyParser.raw({ type: 'image/*', limit: '160MB' }));
 
 app.get('/', (req, res) => {
-  // res.send('Hello World')
+  console.log('Hello World');
   connection.connect((err) => {
     if (!!err) {
       res.send(err)
