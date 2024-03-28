@@ -6,10 +6,10 @@ const sendMail = require('./sendmail');
 const multer = require('multer');
 const bodyParser = require('body-parser')
 const mysql = require('mysql2');
+const bcrypt = require('bcrypt');
 const dotenv = require("dotenv")
 dotenv.config() // ถ้าจะใช้ ตัวแปรในไฟล์ .env ต้องเอา dotenv.config() อยู่เหนือ process.env เพราะจะเรียกใช้ได้
 const PORT = process.env.PORT || 8080
-// const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { json } = require('react-router-dom');
 const router = require('express-promise-router')()
@@ -785,19 +785,19 @@ app.post('/api/login', (req, res) => {
       } else {
         if(results.length > 0){
           const user = results[0];
-          // const passwordMatch = await bcrypt.compare(password, user.user_password);
+          const passwordMatch = await bcrypt.compare(password, user.user_password);
 
-          // if (passwordMatch) {
-          //   if(true)
-          //   {
-          //     const accessToken = generateAccessToken({ user_id: user.user_id });
-          //     res.status(200).send({ accessToken: accessToken, email: req.body.email,user_id: user.user_id });
-          //   }else {
-          //     res.status(401).send({ message: "อีเมลยังไม่ได้รับการอนุมัติ" });
-          //   }
-          // } else {
-          //   res.status(401).send({ message: "อีเมล์หรือรหัสผ่านผิด กรุณาตรวจสอบ" });
-          // }
+          if (passwordMatch) {
+            if(true)
+            {
+              const accessToken = generateAccessToken({ user_id: user.user_id });
+              res.status(200).send({ accessToken: accessToken, email: req.body.email,user_id: user.user_id });
+            }else {
+              res.status(401).send({ message: "อีเมลยังไม่ได้รับการอนุมัติ" });
+            }
+          } else {
+            res.status(401).send({ message: "อีเมล์หรือรหัสผ่านผิด กรุณาตรวจสอบ" });
+          }
         }
 
       }
