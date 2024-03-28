@@ -1,6 +1,5 @@
 const express = require('express')
 const app = express()
-const PORT = process.env.PORT || 8080
 const cors = require('cors')
 const helper = require('./upload');
 const sendMail = require('./sendmail');
@@ -8,16 +7,29 @@ const multer = require('multer');
 const bodyParser = require('body-parser')
 const mysql = require('mysql2');
 const dotenv = require("dotenv")
-// const bcrypt = require('bcrypt');
+dotenv.config() // ถ้าจะใช้ ตัวแปรในไฟล์ .env ต้องเอา dotenv.config() อยู่เหนือ process.env เพราะจะเรียกใช้ได้
+const PORT = process.env.PORT || 5000
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { json } = require('react-router-dom');
 const router = require('express-promise-router')()
+
+// ส่วนอันนี้อันเก่า
+// const connection = mysql.createConnection({
+//     host: process.env.DB_USERNAME,
+//     user: process.env.DB_PASSWORD,
+//     database: process.env.DB_HOST,
+//     password: process.env.DB_DATABASE
+// });
+
+// ส่วนนี้หมีแก้
 const connection = mysql.createConnection({
-    host: process.env.DB_USERNAME,
-    user: process.env.DB_PASSWORD,
-    database: process.env.DB_HOST,
-    password: process.env.DB_DATABASE
+  host:  process.env.DB_HOST,
+  user: process.env.DB_USERNAME,
+  database:  process.env.DB_DATABASE ,
+  password: process.env.DB_PASSWORD
 });
+
 connection.connect((err) => {
     if (!!err) {
         console.log(err);
@@ -28,8 +40,7 @@ connection.connect((err) => {
   });
 
 process.env.ACCESS_TOKEN_SECRET = 'doraemon';
-dotenv.config()
-
+// dotenv.config()
 function generateAccessToken(user) {
     return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: 60 * 60 * 24 * 30 });
   }
@@ -54,7 +65,20 @@ app.use(express.json({limit: '1000mb'}));
 app.use(express.urlencoded({extended: true ,limit: '1000mb'}));
 app.use(bodyParser.raw({ type: 'image/*', limit: '160MB' }));
 
-app.get('/', (req, res) => res.send('Hello World'))
+app.get('/', (req, res) => {
+  // res.send('Hello World')
+  connection.connect((err) => {
+    if (!!err) {
+      res.send(err)
+        console.log(err);
+    } else {
+      res.send('Database Connected Success')
+        console.log('Connected...');
+    }
+  
+  });
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on port : ${PORT}`)
 })
@@ -1662,6 +1686,7 @@ app.get('/api/userCount', function (req, res) {
 
 const fs = require('fs');
 const path = require('path');
+const { error } = require('console');
 
 app.post('/api/add-data',upload.single('questionsImage'),async (req, res) => {
   const { exam_id, book_id, article_id, total_questions, questionstext } = req.body;
