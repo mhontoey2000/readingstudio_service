@@ -1257,7 +1257,7 @@ app.get('/api/allbookarticleadmin', function (req, res) {
       });
   
       const bookdata = Object.values(uniqueBooks);
-      console.log(bookdata)
+      // console.log(bookdata)
       res.json(bookdata);
     }
   );
