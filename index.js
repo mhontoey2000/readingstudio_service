@@ -24,45 +24,45 @@ const router = require('express-promise-router')()
 
 // ส่วนนี้หมีแก้
 const connection = mysql.createConnection({
-  host:  process.env.DB_HOST,
+  host: process.env.DB_HOST,
   user: process.env.DB_USERNAME,
-  database:  process.env.DB_DATABASE ,
+  database: process.env.DB_DATABASE,
   password: process.env.DB_PASSWORD
 });
 
 connection.connect((err) => {
-    if (!!err) {
-        console.log(err);
-    } else {
-        console.log('Connected...');
-    }
-  
-  });
+  if (!!err) {
+    console.log(err);
+  } else {
+    console.log('Connected...');
+  }
+
+});
 
 process.env.ACCESS_TOKEN_SECRET = 'doraemon';
 // dotenv.config()
 function generateAccessToken(user) {
-    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: 60 * 60 * 24 * 30 });
-  }
-  function decodedToken(token) {
-    return new Promise((resolve, reject) => {
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-          // Token is invalid or has expired
-          resolve(false);
-        } else {
-          // Token is valid;
-          resolve(true);
-        }
-      });
+  return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: 60 * 60 * 24 * 30 });
+}
+function decodedToken(token) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) {
+        // Token is invalid or has expired
+        resolve(false);
+      } else {
+        // Token is valid;
+        resolve(true);
+      }
     });
-  }
+  });
+}
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json({ limit: '500mb' }));
 app.use(bodyParser.urlencoded({ limit: '500mb', extended: true }));
-app.use(express.json({limit: '1000mb'}));
-app.use(express.urlencoded({extended: true ,limit: '1000mb'}));
+app.use(express.json({ limit: '1000mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1000mb' }));
 app.use(bodyParser.raw({ type: 'image/*', limit: '160MB' }));
 
 app.get('/', (req, res) => {
@@ -70,43 +70,43 @@ app.get('/', (req, res) => {
   connection.connect((err) => {
     if (!!err) {
       res.send(err)
-        console.log(err);
+      console.log(err);
     } else {
       res.send('Database Connected Success')
-        console.log('Connected...');
+      console.log('Connected...');
     }
-  
+
   });
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port : ${PORT}`)
+  console.log(`Server is running on port : ${PORT}`)
 })
 
 
-router.get('/tbl',async (req,res,next) => {
-    try {
-        connect.query('SELECT * FROM book',(err,rows) => {
-            if (err){
-                res.send(err)
-            }
-            else{
-                res.send(rows)
-            }
-        }) 
-    }
-    catch (e) {
-        res.send(e)
-    }
+router.get('/tbl', async (req, res, next) => {
+  try {
+    connect.query('SELECT * FROM book', (err, rows) => {
+      if (err) {
+        res.send(err)
+      }
+      else {
+        res.send(rows)
+      }
+    })
+  }
+  catch (e) {
+    res.send(e)
+  }
 })
 
 
 //หน้า exams
 
 app.get('/api/exam/:id', function (req, res) {
-  console.log('article_id'+req.params.id);
+  console.log('article_id' + req.params.id);
   const article_id = req.params.id;
-  connection.query(`SELECT * FROM exams WHERE exams.article_id = ?;`,[article_id], function(err, results) {
+  connection.query(`SELECT * FROM exams WHERE exams.article_id = ?;`, [article_id], function (err, results) {
     if (err) {
       // จัดการข้อผิดพลาดที่เกิดขึ้น
       console.error(err);
@@ -121,62 +121,62 @@ app.get('/api/exam/:id', function (req, res) {
   LEFT JOIN options ON questions.question_id = options.question_id
   WHERE exams.article_id = ?;`;
 
-connection.query(query,[article_id], function(err, results) {
-  if (err) {
-    // จัดการข้อผิดพลาดที่เกิดขึ้น
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
-    return;
-  }
-  // console.log(results);
-  const groupedData = {};
-
-  // ลูปผ่านข้อมูลที่คุณได้รับ
-  results.forEach((item) => {
-    const {
-      exam_id,
-      question_id,
-      question_text,
-      question_image,
-      question_imagedata,
-      qusetopn_options,
-    } = item;
-    let base64Image = null;
-    if(!groupedData[question_id]){
-      if(question_imagedata){
-         base64Image = `data:image/jpeg;base64,${Buffer.from(question_imagedata).toString('base64')}`;
-      }
+  connection.query(query, [article_id], function (err, results) {
+    if (err) {
+      // จัดการข้อผิดพลาดที่เกิดขึ้น
+      console.error(err);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
     }
-    // ถ้ายังไม่มีข้อมูลสำหรับคำถามนี้ใน groupedData
-    if (!groupedData[question_id]) {
-      groupedData[question_id] = {
+    // console.log(results);
+    const groupedData = {};
+
+    // ลูปผ่านข้อมูลที่คุณได้รับ
+    results.forEach((item) => {
+      const {
         exam_id,
         question_id,
         question_text,
         question_image,
-        question_imagedata: base64Image,
-        question_options: [],
-      };
-    }
+        question_imagedata,
+        qusetopn_options,
+      } = item;
+      let base64Image = null;
+      if (!groupedData[question_id]) {
+        if (question_imagedata) {
+          base64Image = `data:image/jpeg;base64,${Buffer.from(question_imagedata).toString('base64')}`;
+        }
+      }
+      // ถ้ายังไม่มีข้อมูลสำหรับคำถามนี้ใน groupedData
+      if (!groupedData[question_id]) {
+        groupedData[question_id] = {
+          exam_id,
+          question_id,
+          question_text,
+          question_image,
+          question_imagedata: base64Image,
+          question_options: [],
+        };
+      }
 
-    // เพิ่มตัวเลือกของคำถามนี้เข้าไปใน question_options
-    let option = {
-      option_id: item.option_id,
-      option_text: item.option_text,
-      is_correct: item.is_correct,
-    };
-   
-    groupedData[question_id].question_options.push(option);
-  });
- 
-  // แปลง Object ใน groupedData เป็น Array
-  const result = Object.values(groupedData);
-  // console.log(result.question_options[0]);
-  console.log(result);
-  res.json(result);
-  result.forEach(r =>{
-    console.log(r);
-  })
+      // เพิ่มตัวเลือกของคำถามนี้เข้าไปใน question_options
+      let option = {
+        option_id: item.option_id,
+        option_text: item.option_text,
+        is_correct: item.is_correct,
+      };
+
+      groupedData[question_id].question_options.push(option);
+    });
+
+    // แปลง Object ใน groupedData เป็น Array
+    const result = Object.values(groupedData);
+    // console.log(result.question_options[0]);
+    console.log(result);
+    res.json(result);
+    result.forEach(r => {
+      console.log(r);
+    })
   });
 });
 
@@ -189,35 +189,35 @@ connection.query(query,[article_id], function(err, results) {
 // Multer configuration for handling file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, '../frontend/public/picture'); 
+    cb(null, '../frontend/public/picture');
   },
   filename: (req, file, cb) => {
-    const fileName =  'temp'+Date.now() + path.extname(file.originalname); 
+    const fileName = 'temp' + Date.now() + path.extname(file.originalname);
     cb(null, fileName);
   },
 });
 
-const upload = multer({ storage:storage });
+const upload = multer({ storage: storage });
 
 //หน้าหนังสือ
 app.get('/api/book', function (req, res) {
- 
+
   connection.query(
-      'SELECT * FROM book',
-      function(err, results) {
-        const bookdata = results.map((book) => {
-          const img = helper.convertBlobToBase64(book.book_imagedata);
-          return {
-            ...book,
-            book_imagedata: img,
-          };
-        });
-        // console.log(results);
-        console.log(bookdata);
-        res.json(bookdata);
-        // res.json(results);
-      }
-    );
+    'SELECT * FROM book',
+    function (err, results) {
+      const bookdata = results.map((book) => {
+        const img = helper.convertBlobToBase64(book.book_imagedata);
+        return {
+          ...book,
+          book_imagedata: img,
+        };
+      });
+      // console.log(results);
+      console.log(bookdata);
+      res.json(bookdata);
+      // res.json(results);
+    }
+  );
 });
 
 // New endpoint to increment book_view
@@ -259,39 +259,39 @@ app.post('/api/articles/view/:articleId', (req, res) => {
 app.get('/api/book/:bookId', function (req, res) {
   const bookid = req.params.bookId;
   connection.query(
-      'SELECT * FROM book WHERE book_id = ?',[bookid],
-      function(err, results) {
-        const bookdata = results.map((book) => {
-          const img = helper.convertBlobToBase64(book.book_imagedata);
-          return {
-            ...book,
-            book_imagedata: img,
-          };
-        });
-        // console.log(results);
-        console.log(bookdata);
-        res.json(bookdata);
-        // res.json(results);
-      }
-    );
+    'SELECT * FROM book WHERE book_id = ?', [bookid],
+    function (err, results) {
+      const bookdata = results.map((book) => {
+        const img = helper.convertBlobToBase64(book.book_imagedata);
+        return {
+          ...book,
+          book_imagedata: img,
+        };
+      });
+      // console.log(results);
+      console.log(bookdata);
+      res.json(bookdata);
+      // res.json(results);
+    }
+  );
 });
 
 app.delete('/api/deletebook/:bookId', function (req, res) {
   const bookid = req.params.bookId;
-  console.log('removed book : '+ bookid);
+  console.log('removed book : ' + bookid);
 
   connection.query(
-      'DELETE FROM book WHERE book_id = ?',[bookid],
-      function(err, results) {
-        if (err) {
-          console.error('Error removed book:', err);
-          res.status(500).json({ error: 'Error removed book' });
+    'DELETE FROM book WHERE book_id = ?', [bookid],
+    function (err, results) {
+      if (err) {
+        console.error('Error removed book:', err);
+        res.status(500).json({ error: 'Error removed book' });
       } else {
-          console.log('removed book successfully');
-          res.status(200).json({ message: 'removed book successfully' });
+        console.log('removed book successfully');
+        res.status(200).json({ message: 'removed book successfully' });
       }
-      }
-    );
+    }
+  );
 });
 
 app.post('/api/updatebook', upload.single('book_image'), async (req, res) => {
@@ -318,13 +318,13 @@ app.post('/api/updatebook', upload.single('book_image'), async (req, res) => {
   updateValues.push(book_id);
 
   connection.query(updateQuery, updateValues, (err, result) => {
-      if (err) {
-          console.error('Error update book:', err);
-          res.status(500).json({ error: 'Error update book' });
-      } else {
-          console.log('Book update successfully');
-          res.status(200).json({ message: 'Book update successfully' });
-      }
+    if (err) {
+      console.error('Error update book:', err);
+      res.status(500).json({ error: 'Error update book' });
+    } else {
+      console.log('Book update successfully');
+      res.status(200).json({ message: 'Book update successfully' });
+    }
   });
 });
 
@@ -352,7 +352,7 @@ app.post('/api/updateLeveltext', (req, res) => {
 
           connection.query(
             'UPDATE book SET status_book = ? WHERE book_id = (SELECT book_id FROM article WHERE article_id = ?)',
-            [ "published", articleId],
+            ["published", articleId],
             function (err, results) {
               if (err) {
                 connection.rollback(function () {
@@ -382,214 +382,214 @@ app.post('/api/updateLeveltext', (req, res) => {
 });
 
 
-  app.post('/api/addbook',upload.single('book_image'),async (req, res) => {
-    const { book_name, book_detail, book_creator } = req.body;
-    const fs = require('fs');
-    const imageFile = req.file ? req.file : null;
-    let imagepath = null;
-    let imageByte = null;   
+app.post('/api/addbook', upload.single('book_image'), async (req, res) => {
+  const { book_name, book_detail, book_creator } = req.body;
+  const fs = require('fs');
+  const imageFile = req.file ? req.file : null;
+  let imagepath = null;
+  let imageByte = null;
 
-    if(imageFile)
-    {
-      imageByte = await helper.readFileAsync(imageFile.path);
-      console.log(imageFile,imageFile.path ,imageByte);
-      let img = helper.generateUniqueFileName('picture');
-      imagepath = img.pathimage;
-      await helper.writeFileAsync(img.fileName ,imageByte);
-      fs.unlinkSync(imageFile.path);
+  if (imageFile) {
+    imageByte = await helper.readFileAsync(imageFile.path);
+    console.log(imageFile, imageFile.path, imageByte);
+    let img = helper.generateUniqueFileName('picture');
+    imagepath = img.pathimage;
+    await helper.writeFileAsync(img.fileName, imageByte);
+    fs.unlinkSync(imageFile.path);
+  }
+  connection.query("SELECT book_id FROM book ORDER BY book_id DESC LIMIT 1", (err, results) => {
+    if (err) {
+      console.error('Error fetching last book_id:', err);
+      res.status(500).json({ error: 'Error fetching last book_id' });
+      return;
     }
-    connection.query("SELECT book_id FROM book ORDER BY book_id DESC LIMIT 1", (err, results) => {
-      if (err) {
-          console.error('Error fetching last book_id:', err);
-          res.status(500).json({ error: 'Error fetching last book_id' });
-          return;
-      }
-  
-      let lastNumber = 0;
-      if (results.length > 0) {
-          const lastBookId = results[0].book_id;
-          lastNumber = parseInt(lastBookId.replace('book', ''), 10); 
-      }
-  
-      const newNumber = lastNumber + 1;
-      const book_id = `book${String(newNumber).padStart(3, '0')}`;
 
-      connection.query("INSERT INTO book (book_id, book_name, book_detail, book_image, book_imagedata, book_creator, status_book) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-      [book_id, book_name, book_detail,imagepath,imageByte,book_creator,"creating"], 
+    let lastNumber = 0;
+    if (results.length > 0) {
+      const lastBookId = results[0].book_id;
+      lastNumber = parseInt(lastBookId.replace('book', ''), 10);
+    }
+
+    const newNumber = lastNumber + 1;
+    const book_id = `book${String(newNumber).padStart(3, '0')}`;
+
+    connection.query("INSERT INTO book (book_id, book_name, book_detail, book_image, book_imagedata, book_creator, status_book) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [book_id, book_name, book_detail, imagepath, imageByte, book_creator, "creating"],
       (err, result) => {
-          if (err) {
-              console.error('Error adding book:', err);
-              res.status(500).json({ error: 'Error adding book' });
-          } else {
-              console.log('Book added successfully');
-              res.status(200).json({ message: 'Book added successfully' });
-          }
+        if (err) {
+          console.error('Error adding book:', err);
+          res.status(500).json({ error: 'Error adding book' });
+        } else {
+          console.log('Book added successfully');
+          res.status(200).json({ message: 'Book added successfully' });
+        }
       });
-    });
   });
+});
 
 
-  app.get('/api/article', function (req, res) {
- 
-    connection.query(
-        'SELECT * FROM article',
-        function(err, results) {
-          const articledata = results.map((article) => {
-            const img = helper.convertBlobToBase64(article.article_imagedata);
-            return {
-              ...article,
-              article_imagedata: img,
-            };
-          });
-          // console.log(articledata);
-          res.json(articledata);
-          // res.json(results);
-        }
-      );
-  });
-  app.post('/api/getarticle', function (req, res) {
-    const article_id = req.body.articleid;
+app.get('/api/article', function (req, res) {
 
-    console.log(article_id);
- 
-    connection.query(
-      `SELECT * FROM article WHERE article_id = ?;`,
-      [article_id],
-        function(err, results) {
-          if (err) {
-            console.error(err);
-            res.status(500).json({ error: 'Failed to retrieve article' });
-            return;
-          }
+  connection.query(
+    'SELECT * FROM article',
+    function (err, results) {
+      const articledata = results.map((article) => {
+        const img = helper.convertBlobToBase64(article.article_imagedata);
+        return {
+          ...article,
+          article_imagedata: img,
+        };
+      });
+      // console.log(articledata);
+      res.json(articledata);
+      // res.json(results);
+    }
+  );
+});
+app.post('/api/getarticle', function (req, res) {
+  const article_id = req.body.articleid;
 
-          if (results.length === 0) {
-            res.status(404).json({ error: 'Article not found' });
-            return;
-          }
+  console.log(article_id);
 
-          const article = results[0];
-          const img = helper.convertBlobToBase64(article.article_imagedata);
-          const articledata = {
-            ...article,
-            article_imagedata: img,
-          };
-          res.json(articledata);
-        }
-      );
-  });
-
-  app.get('/api/typebook/:id', function (req, res) {
-    const article_id = req.parems.id;
-  
-    connection.query(
-      `SELECT aricle_level FROM article WHERE article_id = ?;`,
-      [article_id],
-      function (err, results) {
-        if (err) {
-          console.error(err);
-          res.status(500).send('Error retrieving article data');
-        } else {
-          
-          const article_level = results[0].article_level;
-          res.json(article_level);
-        }
+  connection.query(
+    `SELECT * FROM article WHERE article_id = ?;`,
+    [article_id],
+    function (err, results) {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to retrieve article' });
+        return;
       }
-    );
-  });
-  
-  app.delete('/api/deletearticle/:articleId', function (req, res) {
-    const articleId = req.params.articleId;
-    console.log('removed article : '+ articleId);
-  
-    connection.query(
-        'DELETE FROM article WHERE article_id = ?',[articleId],
-        function(err, results) {
-          if (err) {s
-            console.error('Error removed article:', err);
-            res.status(500).json({ error: 'Error removed article' });
-        } else {
-            console.log('removed article successfully');
-            res.status(200).json({ message: 'removed article successfully' });
-        }
-        }
-      );
-  });
-  app.get('/api/article/:id', function (req, res) {
-    const book_id = req.params.id;
-  
-    connection.query(
-      `SELECT * FROM article WHERE book_id = ?;`,
-      [book_id],
-      function(err, results) {
-        if (err) {
-          console.error(err);
-          res.status(500).json({ error: 'Internal Server Error' });
-          return;
-        }
-  
-        const articlesWithImages = results.map((article) => {
-          const img = helper.convertBlobToBase64(article.article_imagedata);
-          return {
-            ...article,
-            article_imagedata: img,
-          };
-        });
-        console.log(articlesWithImages);
-        res.json(articlesWithImages);
-      }
-    );
-  });
 
-  app.get('/api/getarticleban/:id', function (req, res) {
-     const book_id = req.params.id;
-  
-    connection.query(
-      `SELECT * FROM article WHERE book_id = ?;`,
-      [book_id],
-      function(err, results) {
-        if (err) {
-          console.error(err);
-          res.status(500).json({ error: 'Internal Server Error' });
-          return;
-        }
-  
-        const articlesWithImages = results.map((article) => {
-          const img = helper.convertBlobToBase64(article.article_imagedata);
-          return {
-            ...article,
-            article_imagedata: img,
-          };
-        });
-        console.log(articlesWithImages);
-        res.json(articlesWithImages);
+      if (results.length === 0) {
+        res.status(404).json({ error: 'Article not found' });
+        return;
       }
-    );
-  });
-  
-  app.get('/api/articledetail/:id', function (req, res) {
-    const userId = req.query.user_id; 
-    const article_id = req.params.id;
 
-    connection.query(
-      `SELECT * FROM article WHERE article_id = ?;`,
-      [article_id],
-      function(err, results) {
-        if (err) {
-          console.error(err);
-          res.status(500).json({ error: 'Internal Server Error' });
-          return;
-        }
-        const articlesWithImages = results.map((article) => {
-          const img = helper.convertBlobToBase64(article.article_imagedata);
-          return {
-            ...article,
-            article_imagedata: img,
-          };
-        });
-        res.json(articlesWithImages);
+      const article = results[0];
+      const img = helper.convertBlobToBase64(article.article_imagedata);
+      const articledata = {
+        ...article,
+        article_imagedata: img,
+      };
+      res.json(articledata);
+    }
+  );
+});
+
+app.get('/api/typebook/:id', function (req, res) {
+  const article_id = req.parems.id;
+
+  connection.query(
+    `SELECT aricle_level FROM article WHERE article_id = ?;`,
+    [article_id],
+    function (err, results) {
+      if (err) {
+        console.error(err);
+        res.status(500).send('Error retrieving article data');
+      } else {
+
+        const article_level = results[0].article_level;
+        res.json(article_level);
       }
-    );
-  });
+    }
+  );
+});
+
+app.delete('/api/deletearticle/:articleId', function (req, res) {
+  const articleId = req.params.articleId;
+  console.log('removed article : ' + articleId);
+
+  connection.query(
+    'DELETE FROM article WHERE article_id = ?', [articleId],
+    function (err, results) {
+      if (err) {
+        s
+        console.error('Error removed article:', err);
+        res.status(500).json({ error: 'Error removed article' });
+      } else {
+        console.log('removed article successfully');
+        res.status(200).json({ message: 'removed article successfully' });
+      }
+    }
+  );
+});
+app.get('/api/article/:id', function (req, res) {
+  const book_id = req.params.id;
+
+  connection.query(
+    `SELECT * FROM article WHERE book_id = ?;`,
+    [book_id],
+    function (err, results) {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+
+      const articlesWithImages = results.map((article) => {
+        const img = helper.convertBlobToBase64(article.article_imagedata);
+        return {
+          ...article,
+          article_imagedata: img,
+        };
+      });
+      console.log(articlesWithImages);
+      res.json(articlesWithImages);
+    }
+  );
+});
+
+app.get('/api/getarticleban/:id', function (req, res) {
+  const book_id = req.params.id;
+
+  connection.query(
+    `SELECT * FROM article WHERE book_id = ?;`,
+    [book_id],
+    function (err, results) {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+
+      const articlesWithImages = results.map((article) => {
+        const img = helper.convertBlobToBase64(article.article_imagedata);
+        return {
+          ...article,
+          article_imagedata: img,
+        };
+      });
+      console.log(articlesWithImages);
+      res.json(articlesWithImages);
+    }
+  );
+});
+
+app.get('/api/articledetail/:id', function (req, res) {
+  const userId = req.query.user_id;
+  const article_id = req.params.id;
+
+  connection.query(
+    `SELECT * FROM article WHERE article_id = ?;`,
+    [article_id],
+    function (err, results) {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+      const articlesWithImages = results.map((article) => {
+        const img = helper.convertBlobToBase64(article.article_imagedata);
+        return {
+          ...article,
+          article_imagedata: img,
+        };
+      });
+      res.json(articlesWithImages);
+    }
+  );
+});
 
 app.post('/api/articledetail/:id/record-history', (req, res) => {
   const userId = req.body.user_id;
@@ -615,62 +615,61 @@ app.post('/api/articledetail/:id/record-history', (req, res) => {
       //   // History record already exists, do not insert a new one
       //   res.json({ success: true, message: 'History record already exists' });
       // } else {
-        // Insert a new history record
-        connection.query(
-          `INSERT INTO history (user_id, article_id, book_id, watched_at) VALUES (?, ?, ?, NOW());`,
-          [userId, article_id, book_id],
-          function (err) {
-            if (err) {
-              console.error(err);
-              res.status(500).json({ error: 'Error recording reading history' });
-            } else {
-              res.json({ success: true });
-            }
+      // Insert a new history record
+      connection.query(
+        `INSERT INTO history (user_id, article_id, book_id, watched_at) VALUES (?, ?, ?, NOW());`,
+        [userId, article_id, book_id],
+        function (err) {
+          if (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error recording reading history' });
+          } else {
+            res.json({ success: true });
           }
-        );
+        }
+      );
       //}
     }
   );
 });
 
- app.get('/api/exam', function (req, res) {
-   connection.query(
-       `SELECT * FROM exams`,
-       function(err, results) {
-         console.log(res.json(results));
-       }
-     );
- });
-
- 
-
-
- app.get('/api/user', function (req, res) {
+app.get('/api/exam', function (req, res) {
   connection.query(
-      `SELECT * FROM user ORDER BY user_id DESC`,
-      function(err, results) {
-        const user =  results.map((item)=>{
-            const img = helper.convertBlobToBase64(item.user_idcard);
-            return{
-              ...item,
-              user_idcard: img,
-            };
-        });
-        console.log(res.json(user));
-      }
-    );
+    `SELECT * FROM exams`,
+    function (err, results) {
+      console.log(res.json(results));
+    }
+  );
 });
-app.post('/api/updateuser/:id',async function (req, res) {
+
+
+
+
+app.get('/api/user', function (req, res) {
+  connection.query(
+    `SELECT * FROM user ORDER BY user_id DESC`,
+    function (err, results) {
+      const user = results.map((item) => {
+        const img = helper.convertBlobToBase64(item.user_idcard);
+        return {
+          ...item,
+          user_idcard: img,
+        };
+      });
+      console.log(res.json(user));
+    }
+  );
+});
+app.post('/api/updateuser/:id', async function (req, res) {
   const userId = req.params.id;
   const { status, email } = req.body;
 
-  
+
   console.log(status);
   console.log(email);
-  if(status === 'rejected'||status ==='approved')
-  {
-  await sendMail(email,'การลงทะเบียนเข้าใช้งานเป็นผู้สร้างสำหรับ Reading Studio',status ==='approved' ?
-  'บัญชีของคุณได้รับการอนุมัติให้เข้าใช้งานเป็นผู้สร้างแล้ว สามารถเข้าสู่ระบบเพื่อใช้งาน' : 'บัญชีของคุณไม่ได้รับการอนุมัติให้เข้าใช้งานเป็นผู้สร้าง กรุณาลงทะเบียนใหม่อีกครั้ง');
+  if (status === 'rejected' || status === 'approved') {
+    await sendMail(email, 'การลงทะเบียนเข้าใช้งานเป็นผู้สร้างสำหรับ Reading Studio', status === 'approved' ?
+      'บัญชีของคุณได้รับการอนุมัติให้เข้าใช้งานเป็นผู้สร้างแล้ว สามารถเข้าสู่ระบบเพื่อใช้งาน' : 'บัญชีของคุณไม่ได้รับการอนุมัติให้เข้าใช้งานเป็นผู้สร้าง กรุณาลงทะเบียนใหม่อีกครั้ง');
   }
   connection.query(
     'UPDATE user SET approval_status = ? WHERE user_id = ?',
@@ -705,23 +704,23 @@ const checkInactiveUsersAndSendEmails = async () => {
     for (const row of results) {
       const userId = row.user_id;
       const email = row.user_email;
-      
+
       // Check if the user has already been notified
       if (notifiedUsers.has(userId)) {
         console.log(`User ${userId} already notified. Skipping...`);
         continue;
       }
-      
+
       const subject = 'แจ้งเตือนการเข้าใช้งาน Reading Studio';
       const content = 'เนื่องบัญชีของคุณไม่ได้ทำการเข้าใช้งานเป็นเวลามากกว่า 90 วัน ระบบจะทำการลบบัญชีของท่าน หากประสงค์ที่จะใช้งานระบบต่อกรุณาล็อกอินเข้าระบบเพื่อใช้งาน';
-      
+
       // Send the email
       await sendMail(email, subject, content);
-      
+
       // Add the user to the set of notified users
       notifiedUsers.add(userId);
     }
-    
+
     setTimeout(checkInactiveUsersAndSendEmails, 24 * 60 * 60 * 1000);
   });
 };
@@ -762,7 +761,7 @@ app.get('/api/book/search', async (req, res) => {
 
     const [rows] = await connection.execute(`SELECT * FROM book WHERE CONVERT(book_detail USING utf8) COLLATE utf8_general_ci LIKE '%${query}%'`);
     console.log(rows)
-    
+
     res.send(rows);
   } catch (error) {
     console.error(error);
@@ -783,16 +782,15 @@ app.post('/api/login', (req, res) => {
       } else if (results.length === 0) {
         res.status(401).send({ message: "อีเมล์หรือรหัสผ่านผิด กรุณาตรวจสอบ" });
       } else {
-        if(results.length > 0){
+        if (results.length > 0) {
           const user = results[0];
           const passwordMatch = await bcrypt.compare(password, user.user_password);
 
           if (passwordMatch) {
-            if(true)
-            {
+            if (true) {
               const accessToken = generateAccessToken({ user_id: user.user_id });
-              res.status(200).send({ accessToken: accessToken, email: req.body.email,user_id: user.user_id });
-            }else {
+              res.status(200).send({ accessToken: accessToken, email: req.body.email, user_id: user.user_id });
+            } else {
               res.status(401).send({ message: "อีเมลยังไม่ได้รับการอนุมัติ" });
             }
           } else {
@@ -805,60 +803,59 @@ app.post('/api/login', (req, res) => {
   );
 });
 
-app.post('/api/register',upload.single('idcard'),async (req, res) => {
+app.post('/api/register', upload.single('idcard'), async (req, res) => {
   const { name, surname, email, password, usertype } = req.body;
   const saltRounds = 10;
   const imageFile = req.file ? req.file : null;
   let imagepath = null;
   let imageByte = null;
-  let approval = 'pending'; 
-  if(usertype === 'learner')
+  let approval = 'pending';
+  if (usertype === 'learner')
     approval = 'approved'
-  if(imageFile)
-  {
+  if (imageFile) {
     imageByte = await helper.readFileAsync(imageFile.path);
-    console.log(imageFile,imageFile.path ,imageByte);
+    console.log(imageFile, imageFile.path, imageByte);
     let img = helper.generateUniqueFileName('picture');
     imagepath = img.pathimage;
-    await helper.writeFileAsync(img.fileName ,imageByte);
+    await helper.writeFileAsync(img.fileName, imageByte);
     fs.unlinkSync(imageFile.path);
   }
   bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
     if (err) {
       console.log(err);
       res.status(500).send('Error hashing password');
-      return; 
+      return;
     }
     connection.query(
-        "SELECT COUNT(*) AS count FROM user WHERE user_email = ?",
-        [email],
-        (err, result) => {
-            if (err) {
-                console.log(err);
-                res.status(500).send('Error checking email');
-                return; 
-            }
-
-            if (result[0].count > 0) {
-                
-                res.status(400).send('This email is already in use');
-            } else {
-                connection.query(
-                    "INSERT INTO user (user_name, user_surname, user_email, user_password, user_type, user_idcard , approval_status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    [name, surname, email, hashedPassword, usertype,imageByte,approval],
-                    (err, result) => {
-                        if (err) {
-                            console.log(err);
-                            res.status(500).send('Error inserting user data');
-                        } else {
-                            res.send('User data inserted successfully');
-                        }
-                    }
-                );
-            }
+      "SELECT COUNT(*) AS count FROM user WHERE user_email = ?",
+      [email],
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          res.status(500).send('Error checking email');
+          return;
         }
+
+        if (result[0].count > 0) {
+
+          res.status(400).send('This email is already in use');
+        } else {
+          connection.query(
+            "INSERT INTO user (user_name, user_surname, user_email, user_password, user_type, user_idcard , approval_status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [name, surname, email, hashedPassword, usertype, imageByte, approval],
+            (err, result) => {
+              if (err) {
+                console.log(err);
+                res.status(500).send('Error inserting user data');
+              } else {
+                res.send('User data inserted successfully');
+              }
+            }
+          );
+        }
+      }
     );
-});
+  });
 });
 
 
@@ -930,7 +927,7 @@ app.get('/api/watchedhistory', (req, res) => {
 app.get('/api/examhistory', (req, res) => {
   const user_id = req.query.user_id;
   console.log(user_id);
- 
+
   connection.query(
     `SELECT a.article_id, a.article_name, b.book_name, h.submittedAnswers, h.watched_at, a.article_imagedata
     FROM examhistory h
@@ -944,7 +941,7 @@ app.get('/api/examhistory', (req, res) => {
         console.log(err);
         res.status(500).json({ error: 'Error retrieving reading examhistory' });
       } else {
-       console.log(result);
+        console.log(result);
         const articlesWithImages = result.map((article) => {
           // Convert blob to base64
           const img = helper.convertBlobToBase64(article.article_imagedata);
@@ -982,21 +979,21 @@ app.get('/api/allbookcreator', function (req, res) {
   connection.query(
     `SELECT * FROM book WHERE book.book_creator = ?`,
     [email],
-      function(err, results) {
-        const bookdata = results.map((book) => {
-          const img = helper.convertBlobToBase64(book.book_imagedata);
-          return {
-            ...book,
-            book_imagedata: img,
-          };
-        });
-        // console.log(results);
-        console.log(bookdata);
-        res.json(bookdata);
-        // res.json(results);
-      }
-    );
-  
+    function (err, results) {
+      const bookdata = results.map((book) => {
+        const img = helper.convertBlobToBase64(book.book_imagedata);
+        return {
+          ...book,
+          book_imagedata: img,
+        };
+      });
+      // console.log(results);
+      console.log(bookdata);
+      res.json(bookdata);
+      // res.json(results);
+    }
+  );
+
 });
 
 app.get('/api/allbookadmin', function (req, res) {
@@ -1005,21 +1002,21 @@ app.get('/api/allbookadmin', function (req, res) {
   connection.query(
     `SELECT * FROM book`,
     [email],
-      function(err, results) {
-        const bookdata = results.map((book) => {
-          const img = helper.convertBlobToBase64(book.book_imagedata);
-          return {
-            ...book,
-            book_imagedata: img,
-          };
-        });
-        // console.log(results);
-        console.log(bookdata);
-        res.json(bookdata);
-        // res.json(results);
-      }
-    );
-  
+    function (err, results) {
+      const bookdata = results.map((book) => {
+        const img = helper.convertBlobToBase64(book.book_imagedata);
+        return {
+          ...book,
+          book_imagedata: img,
+        };
+      });
+      // console.log(results);
+      console.log(bookdata);
+      res.json(bookdata);
+      // res.json(results);
+    }
+  );
+
 });
 
 app.get('/api/allbookarticlecreator', function (req, res) {
@@ -1039,9 +1036,9 @@ app.get('/api/allbookarticlecreator', function (req, res) {
         res.status(500).json({ error: 'Internal Server Error' });
         return;
       }
-  
+
       const uniqueBooks = {}; // Store unique books by book_id
-  
+
       results.forEach((row) => {
         const book_id = row.book_id;
         // If the book is not in the uniqueBooks object, add it
@@ -1063,30 +1060,30 @@ app.get('/api/allbookarticlecreator', function (req, res) {
           uniqueBooks[book_id].article_name.push(row.article_name);
         }
       });
-  
+
       const bookdata = Object.values(uniqueBooks);
       console.log(bookdata)
       res.json(bookdata);
     }
   );
-  
+
 });
 
 app.delete('/api/deleteallbookcreator/:bookId', function (req, res) {
   const bookId = req.params.bookId;
 
   connection.query(
-      'DELETE FROM book WHERE book_id = ?',
-      [bookId],
-      function (err, results) {
-          if (err) {
-              console.error(err);
-              res.status(500).json({ error: 'Internal Server Error' });
-              return;
-          }
-
-          res.json({ message: 'Book deleted successfully' });
+    'DELETE FROM book WHERE book_id = ?',
+    [bookId],
+    function (err, results) {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
       }
+
+      res.json({ message: 'Book deleted successfully' });
+    }
   );
 });
 
@@ -1100,7 +1097,20 @@ app.get('/api/forapprove', function (req, res) {
       JOIN article a ON b.book_id = a.book_id
       WHERE b.status_book IN ('published', 'deny')
       GROUP BY b.book_id, b.book_name, b.status_book, b.book_imagedata, b.book_view;`,
-    function(err, results) {
+    function (err, results) {
+      // check error
+      if (err) {
+        res.status(500).json({ error: err });
+        return;
+      }
+
+      // check results empty
+      if (!results || results.length === 0) {
+        // handle the case where there are no results
+        res.json([]);
+        return;
+      }
+
       const bookdata = results.map((book) => {
         const img = helper.convertBlobToBase64(book.book_imagedata);
         return {
@@ -1113,8 +1123,8 @@ app.get('/api/forapprove', function (req, res) {
       res.json(bookdata);
     }
   );
-  
-  
+
+
 });
 
 app.get('/api/notification', function (req, res) {
@@ -1126,8 +1136,8 @@ app.get('/api/notification', function (req, res) {
     INNER JOIN article a ON b.book_id = a.book_id
     INNER JOIN forrequest f ON b.book_id = f.book_id AND a.article_id = f.article_id
     WHERE b.book_creator = ?
-    ORDER BY f.created_at DESC`,[email],
-    function(err, results) {
+    ORDER BY f.created_at DESC`, [email],
+    function (err, results) {
       if (!results || results.length === 0) {
         // handle the case where there are no results
         res.json([]);
@@ -1145,7 +1155,7 @@ app.get('/api/notification', function (req, res) {
       // res.json(results);
     }
   );
-  
+
 });
 
 app.post('/api/updateStatusBook/:bookId', (req, res) => {
@@ -1173,49 +1183,49 @@ app.post("/api/updateStatus", (req, res) => {
 
 
   const bookQuery = "UPDATE book SET status_book = ? WHERE book_id = ?";
-connection.query(bookQuery, [newStatus, bookId], (bookErr) => {
-  if (bookErr) {
-    console.error("Error updating book status: " + bookErr);
-    res.status(500).json({ error: "Failed to update book status" });
-    return;
-  }
-  console.log("bookId : " + bookId);
-  console.log("newStatus : " + newStatus);
+  connection.query(bookQuery, [newStatus, bookId], (bookErr) => {
+    if (bookErr) {
+      console.error("Error updating book status: " + bookErr);
+      res.status(500).json({ error: "Failed to update book status" });
+      return;
+    }
+    console.log("bookId : " + bookId);
+    console.log("newStatus : " + newStatus);
 
-  // Check if newStatus is "published" or "deny" and there's an unpublishReason
-  if (newStatus === "published" || newStatus === "deny") {
-    // Check if there are matching rows in the article table
-    const checkArticleQuery = "SELECT article_id FROM article WHERE book_id = ?";
-    connection.query(checkArticleQuery, [bookId], (checkArticleErr, results) => {
-      if (checkArticleErr) {
-        console.error("Error checking for matching articles: " + checkArticleErr);
-        res.status(500).json({ error: "Failed to check for matching articles" });
-        return;
-      }
+    // Check if newStatus is "published" or "deny" and there's an unpublishReason
+    if (newStatus === "published" || newStatus === "deny") {
+      // Check if there are matching rows in the article table
+      const checkArticleQuery = "SELECT article_id FROM article WHERE book_id = ?";
+      connection.query(checkArticleQuery, [bookId], (checkArticleErr, results) => {
+        if (checkArticleErr) {
+          console.error("Error checking for matching articles: " + checkArticleErr);
+          res.status(500).json({ error: "Failed to check for matching articles" });
+          return;
+        }
 
-      if (results.length > 0) {
-        // If matching articles found, insert into forrequest
-        const forRequestQuery = "INSERT INTO forrequest (book_id, article_id, request_comment, status) VALUES (?, ?, ?, ?)";
-        connection.query(forRequestQuery, [bookId, results[0].article_id, unpublishReason, newStatus], (forRequestErr) => {
-          if (forRequestErr) {
-            console.error("Error creating forrequest record: " + forRequestErr);
-            res.status(500).json({ error: "Failed to create forrequest record" });
-            return;
-          }
+        if (results.length > 0) {
+          // If matching articles found, insert into forrequest
+          const forRequestQuery = "INSERT INTO forrequest (book_id, article_id, request_comment, status) VALUES (?, ?, ?, ?)";
+          connection.query(forRequestQuery, [bookId, results[0].article_id, unpublishReason, newStatus], (forRequestErr) => {
+            if (forRequestErr) {
+              console.error("Error creating forrequest record: " + forRequestErr);
+              res.status(500).json({ error: "Failed to create forrequest record" });
+              return;
+            }
 
-          res.json({ message: "Status updated successfully" });
-        });
-      } else {
-        // Handle the case where there are no matching articles
-        // You can choose to insert a default value or take other actions
-        res.json({ message: "No matching articles found" });
-      }
-    });
-  } else {
-    // If no unpublishReason or other newStatus, just update the book status
-    res.json({ message: "Status updated successfully" });
-  }
-});
+            res.json({ message: "Status updated successfully" });
+          });
+        } else {
+          // Handle the case where there are no matching articles
+          // You can choose to insert a default value or take other actions
+          res.json({ message: "No matching articles found" });
+        }
+      });
+    } else {
+      // If no unpublishReason or other newStatus, just update the book status
+      res.json({ message: "Status updated successfully" });
+    }
+  });
 });
 
 app.get('/api/allbookarticleadmin', function (req, res) {
@@ -1232,9 +1242,9 @@ app.get('/api/allbookarticleadmin', function (req, res) {
         res.status(500).json({ error: 'Internal Server Error' });
         return;
       }
-  
+
       const uniqueBooks = {}; // Store unique books by book_id
-  
+
       results.forEach((row) => {
         const book_id = row.book_id;
         const img = helper.convertBlobToBase64(row.book_imagedata);
@@ -1255,13 +1265,13 @@ app.get('/api/allbookarticleadmin', function (req, res) {
           uniqueBooks[book_id].article_name.push(row.article_name);
         }
       });
-  
+
       const bookdata = Object.values(uniqueBooks);
       // console.log(bookdata)
       res.json(bookdata);
     }
   );
-  
+
 });
 
 app.get('/api/allexamcreator', function (req, res) {
@@ -1284,7 +1294,7 @@ app.get('/api/allexamcreator', function (req, res) {
         res.status(500).json({ error: 'Internal Server Error' });
         return;
       }
-  
+
       const uniqueArticle = {}; // Store unique books by book_id
       let exam_count = 1;
       results.forEach((row) => {
@@ -1306,13 +1316,13 @@ app.get('/api/allexamcreator', function (req, res) {
           exam_count = 1;
         }
       });
-  
+
       const examdata = Object.values(uniqueArticle);
       console.log(examdata)
       res.json(examdata);
     }
   );
-  
+
 });
 
 app.get('/api/allexamadmin', function (req, res) {
@@ -1333,7 +1343,7 @@ app.get('/api/allexamadmin', function (req, res) {
         res.status(500).json({ error: 'Internal Server Error' });
         return;
       }
-  
+
       const uniqueArticle = {}; // Store unique books by book_id
       let exam_count = 1;
       results.forEach((row) => {
@@ -1354,13 +1364,13 @@ app.get('/api/allexamadmin', function (req, res) {
           exam_count = 1;
         }
       });
-  
+
       const examdata = Object.values(uniqueArticle);
       console.log(examdata)
       res.json(examdata);
     }
   );
-  
+
 });
 
 // app.post('/api/report', (req, res) => {
@@ -1377,7 +1387,7 @@ app.get('/api/allexamadmin', function (req, res) {
 //       res.status(500).json({ error: 'Error inserting report data' });
 //     } else {
 //       const reportId = result.insertId;
-      
+
 //       res.json({ message: 'Report data inserted successfully', report_id: reportId });
 //     }
 //   });
@@ -1456,7 +1466,7 @@ app.post('/api/del_report/:id', (req, res) => {
   connection.query(
     `DELETE FROM reports WHERE report_id = ?;`,
     [report_id],
-    function(err, results) {
+    function (err, results) {
       if (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -1481,7 +1491,7 @@ app.post('/api/vocabs', async (req, res) => {
       res.status(500).json({ error: 'Error inserting vocabs data' });
     } else {
       const vocabsId = result.insertId;
-      
+
       res.json({ message: 'Report data inserted successfully', vocabs_id: vocabsId });
     }
   });
@@ -1489,17 +1499,17 @@ app.post('/api/vocabs', async (req, res) => {
 
 app.get('/api/vocabs/:id', function (req, res) {
   const article_id = req.params.id;
- 
-   connection.query(
-       `SELECT * FROM vocabs WHERE article_id = ?;`,
-       [article_id],
-       function(err, results) {
-         res.json(results);
-       }
-     );
- });
 
- // deleting vocabs
+  connection.query(
+    `SELECT * FROM vocabs WHERE article_id = ?;`,
+    [article_id],
+    function (err, results) {
+      res.json(results);
+    }
+  );
+});
+
+// deleting vocabs
 app.delete('/api/vocabs/:id', function (req, res) {
   const vocabId = req.params.id;
 
@@ -1554,7 +1564,7 @@ app.get('/api/report', function (req, res) {
             connection.query(`SELECT * FROM book WHERE book_id = ?;`, [report.book_id], (err, book) => {
               if (!err) {
                 entry.book_id = book[0] ? book[0].book_name : "ไม่มีข้อมูล";
-                entry.bookid =report.book_id;
+                entry.bookid = report.book_id;
               }
               resolve(entry);
             });
@@ -1608,13 +1618,13 @@ app.get('/api/report', function (req, res) {
 //           acc[report.bookid].add(report.reporter);
 //           return acc;
 //         }, {});
-      
+
 //         const validBookIds = Object.keys(bookIdReporters).filter(bookid => bookIdReporters[bookid].size >= 3);
-      
+
 //         const filteredData = completedData.filter((report) => {
 //           return validBookIds.includes(report.bookid) && bookIdReporters[report.bookid].has(report.reporter);
 //         });
-      
+
 //         res.json(filteredData);
 //       });
 //     }
@@ -1688,45 +1698,43 @@ const fs = require('fs');
 const path = require('path');
 const { error } = require('console');
 
-app.post('/api/add-data',upload.single('questionsImage'),async (req, res) => {
+app.post('/api/add-data', upload.single('questionsImage'), async (req, res) => {
   const { exam_id, book_id, article_id, total_questions, questionstext } = req.body;
-  const options = JSON.parse(req.body.questionsoptions);questionstext
+  const options = JSON.parse(req.body.questionsoptions); questionstext
   const correctOption = req.body.questionscorrectOption;
-  const imageFile = req.file ? req.file : null; 
+  const imageFile = req.file ? req.file : null;
   let imagepath = null;
   let imageByte = null;
-  if(imageFile)
-  {
+  if (imageFile) {
     imageByte = await helper.readFileAsync(imageFile.path);
-    console.log(imageFile,imageFile.path ,imageByte);
+    console.log(imageFile, imageFile.path, imageByte);
     let img = helper.generateUniqueFileName('picture');
     imagepath = img.pathimage;
-    await helper.writeFileAsync(img.fileName ,imageByte);
+    await helper.writeFileAsync(img.fileName, imageByte);
   }
-  if(exam_id !== '-1')
-  {
+  if (exam_id !== '-1') {
     const insertQuestionQuery = `INSERT INTO questions (exam_id, question_text,question_image,question_imagedata) VALUES (?, ?, ?, ?)`;
-    connection.query( insertQuestionQuery, [exam_id, questionstext,imagepath,imageByte], (err, questionResult) => {
+    connection.query(insertQuestionQuery, [exam_id, questionstext, imagepath, imageByte], (err, questionResult) => {
       if (err) {
         console.error('Error inserting question data: ' + err.message);
         res.status(500).send('Error creating exam INSERT Question');
-      } 
+      }
       else {
         const questionId = questionResult.insertId;
         const insertOptionQuery = `INSERT INTO options (question_id, option_text,is_correct) VALUES (?, ? , ?)`;
         options.forEach((option, index) => {
           let correct = 0;
-          if( correctOption.toString() === index.toString())
+          if (correctOption.toString() === index.toString())
             correct = 1;
-          connection.query(insertOptionQuery, [questionId, option,correct]);
-            });
-          }
-        }
-      );
-      res.status(200).send(`${exam_id}`);
-      
+          connection.query(insertOptionQuery, [questionId, option, correct]);
+        });
+      }
     }
-  else{
+    );
+    res.status(200).send(`${exam_id}`);
+
+  }
+  else {
     const insertExamQuery = `INSERT INTO exams (book_id, article_id, total_questions) VALUES (?, ?, ?)`;
     connection.query(insertExamQuery, [book_id, article_id, total_questions], (err, result) => {
       if (err) {
@@ -1736,68 +1744,67 @@ app.post('/api/add-data',upload.single('questionsImage'),async (req, res) => {
       else {
         const examId = result.insertId;
         const insertQuestionQuery = `INSERT INTO questions (exam_id, question_text,question_image,question_imagedata) VALUES (?, ?, ?, ?)`;
-          connection.query( insertQuestionQuery, [examId, questionstext,imagepath,imageByte], (err, questionResult) => {
-            if (err) {
-              console.error('Error inserting question data: ' + err.message);
-              res.status(500).send('Error creating exam INSERT Question');
-            } 
-            else {
-              const questionId = questionResult.insertId;
-              const insertOptionQuery = `INSERT INTO options (question_id, option_text,is_correct) VALUES (?, ? , ?)`;
-              options.forEach((option, index) => {
-                let correct = 0;
-                if( correctOption.toString() === index.toString())
-                  correct = 1;
-                connection.query(insertOptionQuery, [questionId, option,correct]);
-              });
-            }
+        connection.query(insertQuestionQuery, [examId, questionstext, imagepath, imageByte], (err, questionResult) => {
+          if (err) {
+            console.error('Error inserting question data: ' + err.message);
+            res.status(500).send('Error creating exam INSERT Question');
           }
+          else {
+            const questionId = questionResult.insertId;
+            const insertOptionQuery = `INSERT INTO options (question_id, option_text,is_correct) VALUES (?, ? , ?)`;
+            options.forEach((option, index) => {
+              let correct = 0;
+              if (correctOption.toString() === index.toString())
+                correct = 1;
+              connection.query(insertOptionQuery, [questionId, option, correct]);
+            });
+          }
+        }
         );
         res.status(200).send(`${examId}`);
-    }
+      }
     });
   }
 });
 
-app.post('/api/editexam',upload.single('questionsImage'),async (req, res) => {
+app.post('/api/editexam', upload.single('questionsImage'), async (req, res) => {
 
   const question_id = req.body.question_id;
   const book_id = req.body.book_id;
   const article_id = req.body.article_id;
   const total_questions = req.body.total_questions;
   const questionstext = req.body.questionstext;
-  const options = JSON.parse(req.body.questionsoptions);questionstext
+  const options = JSON.parse(req.body.questionsoptions); questionstext
   const correctOption = req.body.questionscorrectOption;
   const imageFile = req.file ? req.file : null; // ไฟล์รูปภาพ
-  console.log("question_id : "+question_id);
-  console.log("book_id : "+book_id);
-  console.log("article_id : "+article_id);
-  console.log("total_questions : "+total_questions);
-  console.log("questionstext : "+questionstext);
-  console.log("options : "+options);
-  console.log("correctOption : "+correctOption);
-  console.log("questionsImage : "+ imageFile);
+  console.log("question_id : " + question_id);
+  console.log("book_id : " + book_id);
+  console.log("article_id : " + article_id);
+  console.log("total_questions : " + total_questions);
+  console.log("questionstext : " + questionstext);
+  console.log("options : " + options);
+  console.log("correctOption : " + correctOption);
+  console.log("questionsImage : " + imageFile);
   let imagepath = null;
   let imageByte = null;
-  if(imageFile)
-  {
+  if (imageFile) {
     imageByte = await helper.readFileAsync(imageFile.path);
-    console.log(imageFile,imageFile.path ,imageByte);
+    console.log(imageFile, imageFile.path, imageByte);
     let img = helper.generateUniqueFileName('picture');
     imagepath = img.pathimage;
-    await helper.writeFileAsync(img.fileName ,imageByte);
+    await helper.writeFileAsync(img.fileName, imageByte);
     console.log(imageByte);
   }
 
   const updateQuestionQuery = `UPDATE questions SET question_text = ?, question_image = ?, question_imagedata = ? WHERE question_id = ?`;
   const dataupdateQuestionQuery = [questionstext, imagepath, imageByte, question_id];
   const updateOtherDataQuery = `UPDATE questions SET question_text = ? WHERE question_id = ?`;
-  const dataupdateOtherDataQuery =  [questionstext,  question_id];
-  
-  const query =  imageFile ? updateQuestionQuery : updateOtherDataQuery;
-  const dataquery =  imageFile ? dataupdateQuestionQuery : dataupdateOtherDataQuery;
+  const dataupdateOtherDataQuery = [questionstext, question_id];
 
-  connection.query(query,dataquery, (err, questionResult) => {
+  const query = imageFile ? updateQuestionQuery : updateOtherDataQuery;
+  const dataquery = imageFile ? dataupdateQuestionQuery : dataupdateOtherDataQuery;
+
+  connection.query(query, dataquery, (err, questionResult) => {
     if (err) {
       console.error('Error updating question data: ' + err.message);
       res.status(500).send('Error updating question data');
@@ -1826,7 +1833,7 @@ app.delete('/api/deleteeditexam/:id', function (req, res) {
   const questionId = req.params.id;
 
   // แบ่ง query ของ exam_id และ count ให้อยู่ในลำดับที่ถูกต้อง
-  connection.query(`SELECT * FROM questions WHERE question_id = ?`, [questionId], function(err, results) {
+  connection.query(`SELECT * FROM questions WHERE question_id = ?`, [questionId], function (err, results) {
     if (err) {
       console.error('Error querying database:', err);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบข้อมูลในเซิร์ฟเวอร์' });
@@ -1835,7 +1842,7 @@ app.delete('/api/deleteeditexam/:id', function (req, res) {
 
     const examid = results[0].exam_id;
 
-    connection.query(`SELECT * FROM questions WHERE exam_id = ?`, [examid], function(err, results) {
+    connection.query(`SELECT * FROM questions WHERE exam_id = ?`, [examid], function (err, results) {
       if (err) {
         console.error('Error querying database:', err);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบข้อมูลในเซิร์ฟเวอร์' });
@@ -1854,7 +1861,7 @@ app.delete('/api/deleteeditexam/:id', function (req, res) {
 
         if (count === 1) {
           // ถ้า count เท่ากับ 1, แสดงว่าไม่มีคำถามที่เหลือในการสอบ
-          connection.query(`DELETE FROM exams WHERE exam_id = ?`, [examid], function(err, results) {
+          connection.query(`DELETE FROM exams WHERE exam_id = ?`, [examid], function (err, results) {
             if (err) {
               console.error(err);
               res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบข้อมูลในเซิร์ฟเวอร์' });
@@ -1871,58 +1878,56 @@ app.delete('/api/deleteeditexam/:id', function (req, res) {
 });
 
 
-app.post('/api/addarticle', upload.fields([{ name: 'image', maxCount: 1 },  { name: 'sound', maxCount: 1 }]),async (req, res) => {
+app.post('/api/addarticle', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'sound', maxCount: 1 }]), async (req, res) => {
   const book_id = req.body.book_id;
   const chapter = req.body.chapter;
   const level = req.body.level;
   const description = req.body.description;
-  const imageFile = req.files['image'] ?  req.files['image'][0] : null; 
-  const soundFile = req.files['sound'] ?  req.files['sound'][0] : null; 
+  const imageFile = req.files['image'] ? req.files['image'][0] : null;
+  const soundFile = req.files['sound'] ? req.files['sound'][0] : null;
   let imagepath = null;
   let soundpath = null;
   let imageByte = null;
   let soundByte = null;
-  
-  if(imageFile)
-  {
+
+  if (imageFile) {
     imageByte = await helper.readFileAsync(imageFile.path);
-    console.log(imageFile,imageFile.path ,imageByte);
+    console.log(imageFile, imageFile.path, imageByte);
     let img = helper.generateUniqueFileName('picture');
     imagepath = img.pathimage;
-    await helper.writeFileAsync(img.fileName ,imageByte);
+    await helper.writeFileAsync(img.fileName, imageByte);
     fs.unlinkSync(imageFile.path);
   }
-  if(soundFile)
-  {
+  if (soundFile) {
     soundByte = await helper.readFileAsync(soundFile.path);
-    console.log(soundFile,soundFile.path, soundByte);
+    console.log(soundFile, soundFile.path, soundByte);
     let sod = helper.generateUniqueFileName('sound');
     soundpath = sod.pathimage;
-    await helper.writeFileAsync(sod.fileName,soundByte);
+    await helper.writeFileAsync(sod.fileName, soundByte);
     fs.unlinkSync(soundFile.path);
   }
   connection.query("SELECT article_id FROM article ORDER BY article_id DESC LIMIT 1", (err, results) => {
     if (err) {
-        console.error('Error fetching last article_id:', err);
-        res.status(500).json({ error: 'Error fetching last article_id' });
-        return;
+      console.error('Error fetching last article_id:', err);
+      res.status(500).json({ error: 'Error fetching last article_id' });
+      return;
     }
     let lastNumber = 0;
     if (results.length > 0) {
-        const lastBookId = results[0].article_id;
-        if(lastBookId.toString().startsWith('XOL'))
-          lastNumber = parseInt(lastBookId.replace('XOL', ''), 10); 
+      const lastBookId = results[0].article_id;
+      if (lastBookId.toString().startsWith('XOL'))
+        lastNumber = parseInt(lastBookId.replace('XOL', ''), 10);
     }
     const newNumber = lastNumber + 1;
     const newarticleid = `XOL${String(newNumber).padStart(3, '0')}`;
 
     const insertOptionQuery = `INSERT INTO article 
     (article_id ,book_id, article_name ,article_level ,article_detail  ,article_images ,article_sounds,article_imagedata ,article_sounddata) VALUES (?,?,?,?,?,?,?,?,?)`;
-    connection.query(insertOptionQuery, [newarticleid,book_id, chapter,level, description , imagepath , soundpath,imageByte,soundByte], (err, results) => {
+    connection.query(insertOptionQuery, [newarticleid, book_id, chapter, level, description, imagepath, soundpath, imageByte, soundByte], (err, results) => {
       if (err) {
         console.error('Error inserting exam data: ' + err.message);
         res.status(500).send('Error creating exam Insert Id');
-      }else{
+      } else {
         connection.query("UPDATE book SET status_book = ? WHERE book_id = ?", ["published", book_id], (err, updateResult) => {
           if (err) {
             console.error('Error updating status_book:', err);
@@ -1934,19 +1939,19 @@ app.post('/api/addarticle', upload.fields([{ name: 'image', maxCount: 1 },  { na
       }
     });
   });
-  
+
 });
 
-app.post('/api/updatearticle', upload.fields([{ name: 'image', maxCount: 1 },  { name: 'sound', maxCount: 1 }]),async (req, res) => {
+app.post('/api/updatearticle', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'sound', maxCount: 1 }]), async (req, res) => {
   const articleId = req.body.articleId;
   const chapter = req.body.chapter;
   const level = req.body.level;
   const description = req.body.description;
-  const imageFile = req.files['image'] ?  req.files['image'][0] : null; // ข้อมูลรูปภาพในรูปแบบ Buffer
-  const soundFile = req.files['sound'] ?  req.files['sound'][0] : null; // ข้อมูลเสียงในรูปแบบ Buffer
+  const imageFile = req.files['image'] ? req.files['image'][0] : null; // ข้อมูลรูปภาพในรูปแบบ Buffer
+  const soundFile = req.files['sound'] ? req.files['sound'][0] : null; // ข้อมูลเสียงในรูปแบบ Buffer
 
-  console.log(articleId,chapter, level, description, imageFile, soundFile);
-  
+  console.log(articleId, chapter, level, description, imageFile, soundFile);
+
   let imagepath = null;
   let soundpath = null;
 
@@ -1954,55 +1959,55 @@ app.post('/api/updatearticle', upload.fields([{ name: 'image', maxCount: 1 },  {
   let soundByte = null;
   connection.query("SELECT * FROM article WHERE article_id = ?", [articleId], async (err, results) => {
     if (err) {
-        console.error('Error fetching article data:', err);
-        res.status(500).json({ error: 'Error fetching article data' });
-        return;
+      console.error('Error fetching article data:', err);
+      res.status(500).json({ error: 'Error fetching article data' });
+      return;
     }
     console.log('find article id ' + articleId);
 
     if (results.length > 0) {
-        let updateValues = [chapter, description];
-        let updateQuery = `UPDATE article SET article_name=?,article_detail=?`;
+      let updateValues = [chapter, description];
+      let updateQuery = `UPDATE article SET article_name=?,article_detail=?`;
 
-        if (imageFile) {
-            imageByte = await helper.readFileAsync(imageFile.path);
-            const img = helper.generateUniqueFileName('picture');
-            imagepath = img.pathimage;
-            await helper.writeFileAsync(img.fileName, imageByte);
-            fs.unlinkSync(imageFile.path);
+      if (imageFile) {
+        imageByte = await helper.readFileAsync(imageFile.path);
+        const img = helper.generateUniqueFileName('picture');
+        imagepath = img.pathimage;
+        await helper.writeFileAsync(img.fileName, imageByte);
+        fs.unlinkSync(imageFile.path);
 
-            updateQuery += ",article_images=? ,article_imagedata=?";
-            updateValues.push(imagepath,imageByte);
+        updateQuery += ",article_images=? ,article_imagedata=?";
+        updateValues.push(imagepath, imageByte);
+      }
+
+      if (soundFile) {
+        soundByte = await helper.readFileAsync(soundFile.path);
+        const sod = helper.generateUniqueFileName('sound');
+        soundpath = sod.pathimage;
+        await helper.writeFileAsync(sod.fileName, soundByte);
+        fs.unlinkSync(soundFile.path);
+
+        updateQuery += ",article_sounds=?,article_sounddata=?";
+        updateValues.push(soundpath, soundByte);
+      }
+      updateQuery += " WHERE article_id=?"
+      updateValues.push(articleId);
+
+      connection.query(updateQuery, updateValues, async (err, updateResult) => {
+        if (err) {
+          console.error('Error updating article data:', err);
+          res.status(500).json({ error: 'Error updating article data' });
+          return;
         }
 
-        if (soundFile) {
-            soundByte = await helper.readFileAsync(soundFile.path);
-            const sod = helper.generateUniqueFileName('sound');
-            soundpath = sod.pathimage;
-            await helper.writeFileAsync(sod.fileName, soundByte);
-            fs.unlinkSync(soundFile.path);
-
-            updateQuery += ",article_sounds=?,article_sounddata=?";
-            updateValues.push(soundpath,soundByte);
-        }
-        updateQuery += " WHERE article_id=?"
-        updateValues.push(articleId);
-
-        connection.query(updateQuery, updateValues, async (err, updateResult) => {
-            if (err) {
-                console.error('Error updating article data:', err);
-                res.status(500).json({ error: 'Error updating article data' });
-                return;
-            }
-
-            res.status(200).send('Article updated successfully');
-        });
+        res.status(200).send('Article updated successfully');
+      });
     } else {
-        res.status(404).json({ error: 'Article not found' });
+      res.status(404).json({ error: 'Article not found' });
     }
-});
+  });
 
-  
+
 });
 
 app.post('/api/updatebookstatus', (req, res) => {
@@ -2020,7 +2025,7 @@ app.post('/api/updatebookstatus', (req, res) => {
       console.error('Error updating book status:', err);
       res.status(500).json({ error: 'Error updating book status' });
     } else {
-      console.log("ถููกอัพไป",bookId)
+      console.log("ถููกอัพไป", bookId)
       res.status(200).send('Book status updated to "published" successfully');
     }
   });
@@ -2057,7 +2062,7 @@ app.post('/api/examhistory', upload.none(), (req, res) => {
   console.log('Article ID:', articleid);
   console.log('User ID:', userId);
   console.log('bookid ID:', bookid);
-  connection.query("INSERT INTO examhistory (submittedAnswers, article_id, user_id, book_id) VALUES (?, ?, ?, ?)", 
+  connection.query("INSERT INTO examhistory (submittedAnswers, article_id, user_id, book_id) VALUES (?, ?, ?, ?)",
     [submittedAnswers, articleid, userId, bookid],
     (err, result) => {
       if (err) {
