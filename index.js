@@ -14,6 +14,18 @@ const jwt = require('jsonwebtoken');
 const { json } = require('react-router-dom');
 const router = require('express-promise-router')()
 
+<<<<<<< HEAD
+=======
+// ส่วนอันนี้อันเก่า
+// const connection = mysql.createConnection({
+//     host: process.env.DB_USERNAME,
+//     user: process.env.DB_PASSWORD,
+//     database: process.env.DB_HOST,
+//     password: process.env.DB_DATABASE
+// });
+
+// ส่วนนี้หมีแก้
+>>>>>>> 210cf965d8eda12d44ad79fe43b4cbd2d27c4b95
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USERNAME,
