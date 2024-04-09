@@ -1020,7 +1020,8 @@ app.get('/api/allbookarticlecreator', function (req, res) {
     FROM book
     LEFT JOIN article ON book.book_id = article.book_id
     WHERE book.book_creator = ? 
-    GROUP BY book.book_id, book.book_name, book.book_detail, book.book_image,book.book_imagedata, book.book_creator, book.status_book`,
+    GROUP BY book.book_id, book.book_name, book.book_detail, book.book_image, book.book_creator, book.status_book`,
+    // ,book.book_imagedata
     [email],
     function (err, results) {
       if (err) {
@@ -1088,7 +1089,8 @@ app.get('/api/forapprove', function (req, res) {
       FROM book b
       JOIN article a ON b.book_id = a.book_id
       WHERE b.status_book IN ('published', 'deny')
-      GROUP BY b.book_id, b.book_name, b.status_book, b.book_imagedata, b.book_view;`,
+      GROUP BY b.book_id, b.book_name, b.status_book, b.book_view;`,
+      // b.book_imagedata,
     function (err, results) {
       // check error
       if (err) {
