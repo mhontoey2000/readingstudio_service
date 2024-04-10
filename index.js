@@ -186,7 +186,7 @@ app.get("/api/exam/:id", function (req, res) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // cb(null, "../readingstudio_service/picture");
-    cb(null, "./picture");
+    cb(null, "./public/picture");
   },
   filename: (req, file, cb) => {
     const fileName = "temp" + Date.now() + path.extname(file.originalname);

@@ -56,8 +56,8 @@ function generateUniqueFileName(floder) {
   const type = floder === 'picture' ? 'jpg' : 'mp3'
   // const fileName = `../frontend/public/${floder}/${name}${timestamp}.${type}`;
   // const pathimage = fileName.replace('../frontend/public', '');
-  const fileName = `./picture/${floder}/${name}${timestamp}.${type}`;
-  const pathimage = fileName.replace('./picture', '');
+  const fileName = `./public/${floder}/${name}${timestamp}.${type}`;
+  const pathimage = fileName.replace('./public', '');
   return { fileName, pathimage };
 }
 
