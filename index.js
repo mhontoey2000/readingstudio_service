@@ -185,7 +185,8 @@ app.get("/api/exam/:id", function (req, res) {
 // Multer configuration for handling file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "../readingstudio_service/picture");
+    // cb(null, "../readingstudio_service/picture");
+    cb(null, "../picture");
   },
   filename: (req, file, cb) => {
     const fileName = "temp" + Date.now() + path.extname(file.originalname);
