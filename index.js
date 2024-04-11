@@ -859,20 +859,19 @@ app.post("/api/register", upload.single("idcard"), async (req, res) => {
       [email],
       (err, result) => {
         if (err) {
-          console.log('Error checking email');
-          console.log(err);
+          console.log("============== Error checking email ==============");
+          console.log(err.message);
           // res.status(500).send("Error checking email");
           res.status(500).send(err.message);
           return;
         }
 
         if (result[0].count > 0) {
-          res
-            .status(400)
-            .send({
-              statusCode: "email-already",
-              message: "This email is already in use",
-            });
+          console.log("============== Email ซ้ำ ==============");
+          res.status(400).send({
+            statusCode: "email-already",
+            message: "This email is already in use",
+          });
         } else {
           connection.query(
             "INSERT INTO user (user_name, user_surname, user_email, user_password, user_type, user_idcard , approval_status) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -887,6 +886,7 @@ app.post("/api/register", upload.single("idcard"), async (req, res) => {
             ],
             (err, result) => {
               if (err) {
+                console.log("============== Error INSERT ==============");
                 console.log(err);
                 res.status(500).send({
                   statusCode: "insert-error",
