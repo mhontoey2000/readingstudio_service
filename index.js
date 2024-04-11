@@ -859,9 +859,10 @@ app.post("/api/register", upload.single("idcard"), async (req, res) => {
       [email],
       (err, result) => {
         if (err) {
+          console.log('Error checking email');
           console.log(err);
           // res.status(500).send("Error checking email");
-          res.status(500).send(err);
+          res.status(500).send(err.message);
           return;
         }
 
