@@ -860,12 +860,18 @@ app.post("/api/register", upload.single("idcard"), async (req, res) => {
       (err, result) => {
         if (err) {
           console.log(err);
-          res.status(500).send("Error checking email");
+          // res.status(500).send("Error checking email");
+          res.status(500).send(err);
           return;
         }
 
         if (result[0].count > 0) {
-          res.status(400).send("This email is already in use");
+          res
+            .status(400)
+            .send({
+              statusCode: "email-already",
+              message: "This email is already in use",
+            });
         } else {
           connection.query(
             "INSERT INTO user (user_name, user_surname, user_email, user_password, user_type, user_idcard , approval_status) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -881,7 +887,10 @@ app.post("/api/register", upload.single("idcard"), async (req, res) => {
             (err, result) => {
               if (err) {
                 console.log(err);
-                res.status(500).send("Error inserting user data");
+                res.status(500).send({
+                  statusCode: "insert-error",
+                  message: "Error inserting user data",
+                });
               } else {
                 res.send("User data inserted successfully");
               }
