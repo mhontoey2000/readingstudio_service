@@ -862,7 +862,7 @@ app.post("/api/register", upload.single("idcard"), async (req, res) => {
           console.log("============== Error checking email ==============");
           console.log(err.message);
           // res.status(500).send("Error checking email");
-          res.status(500).send(err.message);
+          res.status(500).send('Error checking email');
           return;
         }
 
@@ -888,10 +888,7 @@ app.post("/api/register", upload.single("idcard"), async (req, res) => {
               if (err) {
                 console.log("============== Error INSERT ==============");
                 console.log(err);
-                res.status(500).send({
-                  statusCode: "insert-error",
-                  message: "Error inserting user data",
-                });
+                res.status(500).send('Error inserting user data');
               } else {
                 res.send("User data inserted successfully");
               }
