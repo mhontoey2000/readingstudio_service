@@ -82,7 +82,7 @@ app.listen(PORT, () => {
 
 router.get("/tbl", async (req, res, next) => {
   try {
-    connect.query("SELECT * FROM book", (err, rows) => {
+    connect.query("SELECT * FROM article", (err, rows) => {
       if (err) {
         res.send(err);
       } else {
@@ -97,11 +97,11 @@ router.get("/tbl", async (req, res, next) => {
 //หน้า exams
 
 app.get("/api/exam/:id", function (req, res) {
-  console.log("article_id" + req.params.id);
-  const article_id = req.params.id;
+  console.log("section_id" + req.params.id);
+  const section_id = req.params.id;
   connection.query(
-    `SELECT * FROM exams WHERE exams.article_id = ?;`,
-    [article_id],
+    `SELECT * FROM exams WHERE exams.section_id = ?;`,
+    [section_id],
     function (err, results) {
       if (err) {
         // จัดการข้อผิดพลาดที่เกิดขึ้น
@@ -116,9 +116,9 @@ app.get("/api/exam/:id", function (req, res) {
   FROM exams
   LEFT JOIN questions ON exams.exam_id = questions.exam_id
   LEFT JOIN options ON questions.question_id = options.question_id
-  WHERE exams.article_id = ?;`;
+  WHERE exams.section_id = ?;`;
 
-  connection.query(query, [article_id], function (err, results) {
+  connection.query(query, [section_id], function (err, results) {
     if (err) {
       // จัดการข้อผิดพลาดที่เกิดขึ้น
       console.error(err);
@@ -197,13 +197,13 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 //หน้าหนังสือ
-app.get("/api/book", function (req, res) {
-  connection.query("SELECT * FROM book", function (err, results) {
-    const bookdata = results.map((book) => {
-      const img = helper.convertBlobToBase64(book.book_imagedata);
+app.get("/api/article", function (req, res) {
+  connection.query("SELECT * FROM article", function (err, results) {
+    const bookdata = results.map((article) => {
+      const img = helper.convertBlobToBase64(article.article_imagedata);
       return {
-        ...book,
-        book_imagedata: img,
+        ...article,
+        article_imagedata: img,
       };
     });
     // console.log(results);
@@ -213,12 +213,12 @@ app.get("/api/book", function (req, res) {
   });
 });
 
-// New endpoint to increment book_view
-app.post("/api/book/view/:bookId", (req, res) => {
+// New endpoint to increment article_view
+app.post("/api/article/view/:bookId", (req, res) => {
   const bookId = req.params.bookId;
 
   connection.query(
-    "UPDATE book SET book_view = book_view + 1 WHERE book_id = ?",
+    "UPDATE article SET article_view = article_view + 1 WHERE article_id = ?",
     [bookId],
     (err, results) => {
       if (err) {
@@ -231,12 +231,12 @@ app.post("/api/book/view/:bookId", (req, res) => {
   );
 });
 
-// New endpoint to increment article_view
+// New endpoint to increment section_view
 app.post("/api/articles/view/:articleId", (req, res) => {
   const articleId = req.params.articleId;
 
   connection.query(
-    "UPDATE article SET article_view = article_view + 1 WHERE article_id = ?",
+    "UPDATE article_section SET section_view = section_view + 1 WHERE section_id = ?",
     [articleId],
     (err, results) => {
       if (err) {
@@ -249,17 +249,17 @@ app.post("/api/articles/view/:articleId", (req, res) => {
   );
 });
 
-app.get("/api/book/:bookId", function (req, res) {
+app.get("/api/article/:bookId", function (req, res) {
   const bookid = req.params.bookId;
   connection.query(
-    "SELECT * FROM book WHERE book_id = ?",
+    "SELECT * FROM article WHERE article_id = ?",
     [bookid],
     function (err, results) {
-      const bookdata = results.map((book) => {
-        const img = helper.convertBlobToBase64(book.book_imagedata);
+      const bookdata = results.map((article) => {
+        const img = helper.convertBlobToBase64(article.article_imagedata);
         return {
-          ...book,
-          book_imagedata: img,
+          ...article,
+          article_imagedata: img,
         };
       });
       // console.log(results);
@@ -272,31 +272,31 @@ app.get("/api/book/:bookId", function (req, res) {
 
 app.delete("/api/deletebook/:bookId", function (req, res) {
   const bookid = req.params.bookId;
-  console.log("removed book : " + bookid);
+  console.log("removed article : " + bookid);
 
   connection.query(
-    "DELETE FROM book WHERE book_id = ?",
+    "DELETE FROM article WHERE article_id = ?",
     [bookid],
     function (err, results) {
       if (err) {
-        console.error("Error removed book:", err);
-        res.status(500).json({ error: "Error removed book" });
+        console.error("Error removed article:", err);
+        res.status(500).json({ error: "Error removed article" });
       } else {
-        console.log("removed book successfully");
-        res.status(200).json({ message: "removed book successfully" });
+        console.log("removed article successfully");
+        res.status(200).json({ message: "removed article successfully" });
       }
     }
   );
 });
 
-app.post("/api/updatebook", upload.single("book_image"), async (req, res) => {
-  const { book_id, book_name, book_detail } = req.body;
+app.post("/api/updatebook", upload.single("article_image"), async (req, res) => {
+  const { article_id, article_name, article_detail } = req.body;
   console.log("Received image file:", req.file);
   let updateValues = [];
   let updateQuery =
-    "UPDATE book SET book_name=?, book_detail=?, status_book='published' ";
+    "UPDATE article SET article_name=?, article_detail=?, status_article='published' ";
 
-  updateValues.push(book_name, book_detail);
+  updateValues.push(article_name, article_detail);
 
   if (req.file) {
     const imageFile = req.file;
@@ -306,17 +306,17 @@ app.post("/api/updatebook", upload.single("book_image"), async (req, res) => {
 
     await helper.writeFileAsync(img.fileName, imageByte);
 
-    updateQuery += ", book_image=?, book_imagedata=?";
+    updateQuery += ", article_image=?, article_imagedata=?";
     updateValues.push(imagepath, imageByte);
   }
 
-  updateQuery += " WHERE book_id=?";
-  updateValues.push(book_id);
+  updateQuery += " WHERE article_id=?";
+  updateValues.push(article_id);
 
   connection.query(updateQuery, updateValues, (err, result) => {
     if (err) {
-      console.error("Error update book:", err);
-      res.status(500).json({ error: "Error update book" });
+      console.error("Error update article:", err);
+      res.status(500).json({ error: "Error update article" });
     } else {
       console.log("Book update successfully");
       res.status(200).json({ message: "Book update successfully" });
@@ -335,38 +335,38 @@ app.post("/api/updateLeveltext", (req, res) => {
     }
 
     connection.query(
-      `UPDATE article SET article_level = ?, status_article = ? WHERE article_id = ?`,
+      `UPDATE article_section SET section_level = ?, status_section = ? WHERE section_id = ?`,
       [newLevel, "published", articleId],
       function (err, results) {
         if (err) {
           connection.rollback(function () {
             console.error(
-              "Error updating article level and status_article:",
+              "Error updating article_section level and status_section:",
               err
             );
             res.status(500).json({
-              error: "Failed to update article level and status_article",
+              error: "Failed to update article_section level and status_section",
             });
           });
         } else {
-          console.log("Article level and status_article updated successfully");
+          console.log("Article level and status_section updated successfully");
 
           connection.query(
-            "UPDATE book SET status_book = ? WHERE book_id = (SELECT book_id FROM article WHERE article_id = ?)",
+            "UPDATE article SET status_article = ? WHERE article_id = (SELECT article_id FROM article_section WHERE section_id = ?)",
             ["published", articleId],
             function (err, results) {
               if (err) {
                 connection.rollback(function () {
                   console.error(
-                    "Error updating status_book in book table:",
+                    "Error updating status_article in article table:",
                     err
                   );
                   res.status(500).json({
-                    error: "Failed to update status_book in book table",
+                    error: "Failed to update status_article in article table",
                   });
                 });
               } else {
-                console.log("status_book updated successfully");
+                console.log("status_article updated successfully");
 
                 connection.commit(function (err) {
                   if (err) {
@@ -379,7 +379,7 @@ app.post("/api/updateLeveltext", (req, res) => {
                   } else {
                     res.json({
                       message:
-                        "Article level, status_book, and status_article updated successfully",
+                        "Article level, status_article, and status_section updated successfully",
                     });
                   }
                 });
@@ -392,8 +392,8 @@ app.post("/api/updateLeveltext", (req, res) => {
   });
 });
 
-app.post("/api/addbook", upload.single("book_image"), async (req, res) => {
-  const { book_name, book_detail, book_creator } = req.body;
+app.post("/api/addbook", upload.single("article_image"), async (req, res) => {
+  const { article_name, article_detail, article_creator } = req.body;
   const fs = require("fs");
   const imageFile = req.file ? req.file : null;
   let imagepath = null;
@@ -409,38 +409,38 @@ app.post("/api/addbook", upload.single("book_image"), async (req, res) => {
     fs.unlinkSync(imageFile.path);
   }
   connection.query(
-    "SELECT book_id FROM book ORDER BY book_id DESC LIMIT 1",
+    "SELECT article_id FROM article ORDER BY article_id DESC LIMIT 1",
     (err, results) => {
       if (err) {
-        console.error("Error fetching last book_id:", err);
-        res.status(500).json({ error: "Error fetching last book_id" });
+        console.error("Error fetching last article_id:", err);
+        res.status(500).json({ error: "Error fetching last article_id" });
         return;
       }
 
       let lastNumber = 0;
       if (results.length > 0) {
-        const lastBookId = results[0].book_id;
-        lastNumber = parseInt(lastBookId.replace("book", ""), 10);
+        const lastBookId = results[0].article_id;
+        lastNumber = parseInt(lastBookId.replace("article", ""), 10);
       }
 
       const newNumber = lastNumber + 1;
-      const book_id = `book${String(newNumber).padStart(3, "0")}`;
+      const article_id = `article${String(newNumber).padStart(3, "0")}`;
 
       connection.query(
-        "INSERT INTO book (book_id, book_name, book_detail, book_image, book_imagedata, book_creator, status_book) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO article (article_id, article_name, article_detail, article_image, article_imagedata, article_creator, status_article) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
-          book_id,
-          book_name,
-          book_detail,
+          article_id,
+          article_name,
+          article_detail,
           imagepath,
           imageByte,
-          book_creator,
+          article_creator,
           "creating",
         ],
         (err, result) => {
           if (err) {
-            console.error("Error adding book:", err);
-            res.status(500).json({ error: "Error adding book" });
+            console.error("Error adding article:", err);
+            res.status(500).json({ error: "Error adding article" });
           } else {
             console.log("Book added successfully");
             res.status(200).json({ message: "Book added successfully" });
@@ -451,13 +451,13 @@ app.post("/api/addbook", upload.single("book_image"), async (req, res) => {
   );
 });
 
-app.get("/api/article", function (req, res) {
-  connection.query("SELECT * FROM article", function (err, results) {
-    const articledata = results.map((article) => {
-      const img = helper.convertBlobToBase64(article.article_imagedata);
+app.get("/api/article_section", function (req, res) {
+  connection.query("SELECT * FROM article_section", function (err, results) {
+    const articledata = results.map((article_section) => {
+      const img = helper.convertBlobToBase64(article_section.section_imagedata);
       return {
-        ...article,
-        article_imagedata: img,
+        ...article_section,
+        section_imagedata: img,
       };
     });
     // console.log(articledata);
@@ -466,17 +466,17 @@ app.get("/api/article", function (req, res) {
   });
 });
 app.post("/api/getarticle", function (req, res) {
-  const article_id = req.body.articleid;
+  const section_id = req.body.articleid;
 
-  // console.log(article_id);
+  // console.log(section_id);
 
   connection.query(
-    `SELECT * FROM article WHERE article_id = ?;`,
-    [article_id],
+    `SELECT * FROM article_section WHERE section_id = ?;`,
+    [section_id],
     function (err, results) {
       if (err) {
         console.error(err);
-        res.status(500).json({ error: "Failed to retrieve article" });
+        res.status(500).json({ error: "Failed to retrieve article_section" });
         return;
       }
 
@@ -485,11 +485,11 @@ app.post("/api/getarticle", function (req, res) {
         return;
       }
 
-      const article = results[0];
-      const img = helper.convertBlobToBase64(article.article_imagedata);
+      const article_section = results[0];
+      const img = helper.convertBlobToBase64(article_section.section_imagedata);
       const articledata = {
-        ...article,
-        article_imagedata: img,
+        ...article_section,
+        section_imagedata: img,
       };
       res.json(articledata);
     }
@@ -497,18 +497,18 @@ app.post("/api/getarticle", function (req, res) {
 });
 
 app.get("/api/typebook/:id", function (req, res) {
-  const article_id = req.parems.id;
+  const section_id = req.parems.id;
 
   connection.query(
-    `SELECT aricle_level FROM article WHERE article_id = ?;`,
-    [article_id],
+    `SELECT aricle_level FROM article_section WHERE section_id = ?;`,
+    [section_id],
     function (err, results) {
       if (err) {
         console.error(err);
-        res.status(500).send("Error retrieving article data");
+        res.status(500).send("Error retrieving article_section data");
       } else {
-        const article_level = results[0].article_level;
-        res.json(article_level);
+        const section_level = results[0].section_level;
+        res.json(section_level);
       }
     }
   );
@@ -516,29 +516,29 @@ app.get("/api/typebook/:id", function (req, res) {
 
 app.delete("/api/deletearticle/:articleId", function (req, res) {
   const articleId = req.params.articleId;
-  console.log("removed article : " + articleId);
+  console.log("removed article_section : " + articleId);
 
   connection.query(
-    "DELETE FROM article WHERE article_id = ?",
+    "DELETE FROM article_section WHERE section_id = ?",
     [articleId],
     function (err, results) {
       if (err) {
         s;
-        console.error("Error removed article:", err);
-        res.status(500).json({ error: "Error removed article" });
+        console.error("Error removed article_section:", err);
+        res.status(500).json({ error: "Error removed article_section" });
       } else {
-        console.log("removed article successfully");
-        res.status(200).json({ message: "removed article successfully" });
+        console.log("removed article_section successfully");
+        res.status(200).json({ message: "removed article_section successfully" });
       }
     }
   );
 });
-app.get("/api/article/:id", function (req, res) {
-  const book_id = req.params.id;
+app.get("/api/article_section/:id", function (req, res) {
+  const article_id = req.params.id;
 
   connection.query(
-    `SELECT * FROM article WHERE book_id = ?;`,
-    [book_id],
+    `SELECT * FROM article_section WHERE article_id = ?;`,
+    [article_id],
     function (err, results) {
       if (err) {
         console.error(err);
@@ -546,11 +546,11 @@ app.get("/api/article/:id", function (req, res) {
         return;
       }
 
-      const articlesWithImages = results.map((article) => {
-        const img = helper.convertBlobToBase64(article.article_imagedata);
+      const articlesWithImages = results.map((article_section) => {
+        const img = helper.convertBlobToBase64(article_section.section_imagedata);
         return {
-          ...article,
-          article_imagedata: img,
+          ...article_section,
+          section_imagedata: img,
         };
       });
       // console.log(articlesWithImages);
@@ -560,11 +560,11 @@ app.get("/api/article/:id", function (req, res) {
 });
 
 app.get("/api/getarticleban/:id", function (req, res) {
-  const book_id = req.params.id;
+  const article_id = req.params.id;
 
   connection.query(
-    `SELECT * FROM article WHERE book_id = ?;`,
-    [book_id],
+    `SELECT * FROM article_section WHERE article_id = ?;`,
+    [article_id],
     function (err, results) {
       if (err) {
         console.error(err);
@@ -572,11 +572,11 @@ app.get("/api/getarticleban/:id", function (req, res) {
         return;
       }
 
-      const articlesWithImages = results.map((article) => {
-        const img = helper.convertBlobToBase64(article.article_imagedata);
+      const articlesWithImages = results.map((article_section) => {
+        const img = helper.convertBlobToBase64(article_section.section_imagedata);
         return {
-          ...article,
-          article_imagedata: img,
+          ...article_section,
+          section_imagedata: img,
         };
       });
       // console.log(articlesWithImages);
@@ -587,22 +587,22 @@ app.get("/api/getarticleban/:id", function (req, res) {
 
 app.get("/api/articledetail/:id", function (req, res) {
   const userId = req.query.user_id;
-  const article_id = req.params.id;
+  const section_id = req.params.id;
 
   connection.query(
-    `SELECT * FROM article WHERE article_id = ?;`,
-    [article_id],
+    `SELECT * FROM article_section WHERE section_id = ?;`,
+    [section_id],
     function (err, results) {
       if (err) {
         console.error(err);
         res.status(500).json({ error: "Internal Server Error" });
         return;
       }
-      const articlesWithImages = results.map((article) => {
-        const img = helper.convertBlobToBase64(article.article_imagedata);
+      const articlesWithImages = results.map((article_section) => {
+        const img = helper.convertBlobToBase64(article_section.section_imagedata);
         return {
-          ...article,
-          article_imagedata: img,
+          ...article_section,
+          section_imagedata: img,
         };
       });
       res.json(articlesWithImages);
@@ -612,17 +612,17 @@ app.get("/api/articledetail/:id", function (req, res) {
 
 app.post("/api/articledetail/:id/record-history", (req, res) => {
   const userId = req.body.user_id;
-  const article_id = req.params.id;
-  const book_id = req.body.book_id;
+  const section_id = req.params.id;
+  const article_id = req.body.article_id;
 
-  if (!userId || !article_id || !book_id) {
-    console.error("Invalid user ID, article ID, or book ID");
-    res.status(400).json({ error: "Invalid user ID, article ID, or book ID" });
+  if (!userId || !section_id || !article_id) {
+    console.error("Invalid user ID, article_section ID, or article ID");
+    res.status(400).json({ error: "Invalid user ID, article_section ID, or article ID" });
     return;
   }
   connection.query(
-    `SELECT * FROM history WHERE user_id = ? AND article_id = ? AND book_id = ?;`,
-    [userId, article_id, book_id],
+    `SELECT * FROM history WHERE user_id = ? AND section_id = ? AND article_id = ?;`,
+    [userId, section_id, article_id],
     function (err, results) {
       if (err) {
         console.error(err);
@@ -636,8 +636,8 @@ app.post("/api/articledetail/:id/record-history", (req, res) => {
       // } else {
       // Insert a new history record
       connection.query(
-        `INSERT INTO history (user_id, article_id, book_id, watched_at) VALUES (?, ?, ?, NOW());`,
-        [userId, article_id, book_id],
+        `INSERT INTO history (user_id, section_id, article_id, watched_at) VALUES (?, ?, ?, NOW());`,
+        [userId, section_id, article_id],
         function (err) {
           if (err) {
             console.error(err);
@@ -772,12 +772,12 @@ app.delete("/api/user/:id", function (req, res) {
   );
 });
 
-app.get("/api/book/search", async (req, res) => {
+app.get("/api/article/search", async (req, res) => {
   const query = req.query.query;
 
   try {
     const [rows] = await connection.execute(
-      `SELECT * FROM book WHERE CONVERT(book_detail USING utf8) COLLATE utf8_general_ci LIKE '%${query}%'`
+      `SELECT * FROM article WHERE CONVERT(article_detail USING utf8) COLLATE utf8_general_ci LIKE '%${query}%'`
     );
     // console.log(rows)
 
@@ -941,10 +941,10 @@ app.get("/api/watchedhistory", (req, res) => {
   const user_id = req.query.user_id;
 
   connection.query(
-    `SELECT a.article_id, a.article_name, b.book_name, h.watched_at, a.article_imagedata
+    `SELECT a.section_id, a.section_name, b.article_name, h.watched_at, a.section_imagedata
     FROM history h
-    JOIN article a ON h.article_id = a.article_id
-    JOIN book b ON h.book_id = b.book_id
+    JOIN article_section a ON h.section_id = a.section_id
+    JOIN article b ON h.article_id = b.article_id
     WHERE h.user_id = ?
     ORDER BY h.watched_at DESC`,
     [user_id],
@@ -953,12 +953,12 @@ app.get("/api/watchedhistory", (req, res) => {
         console.log(err);
         res.status(500).json({ error: "Error retrieving reading history" });
       } else {
-        const articlesWithImages = result.map((article) => {
+        const articlesWithImages = result.map((article_section) => {
           // Convert blob to base64
-          const img = helper.convertBlobToBase64(article.article_imagedata);
+          const img = helper.convertBlobToBase64(article_section.section_imagedata);
           return {
-            ...article,
-            article_imagedata: img,
+            ...article_section,
+            section_imagedata: img,
           };
         });
         res.json(articlesWithImages);
@@ -971,10 +971,10 @@ app.get("/api/examhistory", (req, res) => {
   // console.log(user_id);
 
   connection.query(
-    `SELECT a.article_id, a.article_name, b.book_name, h.submittedAnswers, h.watched_at, a.article_imagedata
+    `SELECT a.section_id, a.section_name, b.article_name, h.submittedAnswers, h.watched_at, a.section_imagedata
     FROM examhistory h
-    JOIN article a ON h.article_id = a.article_id
-    JOIN book b ON h.book_id = b.book_id
+    JOIN article_section a ON h.section_id = a.section_id
+    JOIN article b ON h.article_id = b.article_id
     WHERE h.user_id = ?
     ORDER BY h.watched_at DESC`,
     [user_id],
@@ -984,12 +984,12 @@ app.get("/api/examhistory", (req, res) => {
         res.status(500).json({ error: "Error retrieving reading examhistory" });
       } else {
         // console.log(result);
-        const articlesWithImages = result.map((article) => {
+        const articlesWithImages = result.map((article_section) => {
           // Convert blob to base64
-          const img = helper.convertBlobToBase64(article.article_imagedata);
+          const img = helper.convertBlobToBase64(article_section.section_imagedata);
           return {
-            ...article,
-            article_imagedata: img,
+            ...article_section,
+            section_imagedata: img,
           };
         });
 
@@ -1022,14 +1022,14 @@ app.get("/api/allbookcreator", function (req, res) {
   const email = req.query.user_email;
 
   connection.query(
-    `SELECT * FROM book WHERE book.book_creator = ?`,
+    `SELECT * FROM article WHERE article.article_creator = ?`,
     [email],
     function (err, results) {
-      const bookdata = results.map((book) => {
-        const img = helper.convertBlobToBase64(book.book_imagedata);
+      const bookdata = results.map((article) => {
+        const img = helper.convertBlobToBase64(article.article_imagedata);
         return {
-          ...book,
-          book_imagedata: img,
+          ...article,
+          article_imagedata: img,
         };
       });
       // console.log(results);
@@ -1043,12 +1043,12 @@ app.get("/api/allbookcreator", function (req, res) {
 app.get("/api/allbookadmin", function (req, res) {
   const email = req.query.user_email;
 
-  connection.query(`SELECT * FROM book`, [email], function (err, results) {
-    const bookdata = results.map((book) => {
-      const img = helper.convertBlobToBase64(book.book_imagedata);
+  connection.query(`SELECT * FROM article`, [email], function (err, results) {
+    const bookdata = results.map((article) => {
+      const img = helper.convertBlobToBase64(article.article_imagedata);
       return {
-        ...book,
-        book_imagedata: img,
+        ...article,
+        article_imagedata: img,
       };
     });
     // console.log(results);
@@ -1062,12 +1062,12 @@ app.get("/api/allbookarticlecreator", function (req, res) {
   const email = req.query.user_email;
 
   connection.query(
-    `SELECT book.book_id, book.book_name, book.book_detail, book.book_image,book.book_imagedata, book.book_creator, book.status_book,
-            GROUP_CONCAT(article.article_name) AS article_name
-    FROM book
-    LEFT JOIN article ON book.book_id = article.book_id
-    WHERE book.book_creator = ? 
-    GROUP BY book.book_id, book.book_name, book.book_detail, book.book_image,book.book_imagedata, book.book_creator, book.status_book`,
+    `SELECT article.article_id, article.article_name, article.article_detail, article.article_image,article.article_imagedata, article.article_creator, article.status_article,
+            GROUP_CONCAT(article_section.section_name) AS section_name
+    FROM article
+    LEFT JOIN article_section ON article.article_id = article_section.article_id
+    WHERE article.article_creator = ? 
+    GROUP BY article.article_id, article.article_name, article.article_detail, article.article_image,article.article_imagedata, article.article_creator, article.status_article`,
     [email],
     function (err, results) {
       if (err) {
@@ -1076,27 +1076,27 @@ app.get("/api/allbookarticlecreator", function (req, res) {
         return;
       }
 
-      const uniqueBooks = {}; // Store unique books by book_id
+      const uniqueBooks = {}; // Store unique books by article_id
 
       results.forEach((row) => {
-        const book_id = row.book_id;
-        // If the book is not in the uniqueBooks object, add it
-        const img = helper.convertBlobToBase64(row.book_imagedata);
-        if (!uniqueBooks[book_id]) {
-          uniqueBooks[book_id] = {
-            book_id: book_id,
-            book_name: row.book_name,
-            book_detail: row.book_detail,
-            book_image: row.book_image,
-            book_imagedata: img,
-            book_creator: row.book_creator,
-            status_book: row.status_book,
-            article_name: [],
+        const article_id = row.article_id;
+        // If the article is not in the uniqueBooks object, add it
+        const img = helper.convertBlobToBase64(row.article_imagedata);
+        if (!uniqueBooks[article_id]) {
+          uniqueBooks[article_id] = {
+            article_id: article_id,
+            article_name: row.article_name,
+            article_detail: row.article_detail,
+            article_image: row.article_image,
+            article_imagedata: img,
+            article_creator: row.article_creator,
+            status_article: row.status_article,
+            section_name: [],
           };
         }
-        // Add the article_name to the book's article_name array
-        if (row.article_name) {
-          uniqueBooks[book_id].article_name.push(row.article_name);
+        // Add the section_name to the article's section_name array
+        if (row.section_name) {
+          uniqueBooks[article_id].section_name.push(row.section_name);
         }
       });
 
@@ -1111,7 +1111,7 @@ app.delete("/api/deleteallbookcreator/:bookId", function (req, res) {
   const bookId = req.params.bookId;
 
   connection.query(
-    "DELETE FROM book WHERE book_id = ?",
+    "DELETE FROM article WHERE article_id = ?",
     [bookId],
     function (err, results) {
       if (err) {
@@ -1127,13 +1127,13 @@ app.delete("/api/deleteallbookcreator/:bookId", function (req, res) {
 
 app.get("/api/forapprove", function (req, res) {
   connection.query(
-    `SELECT b.book_id, b.book_name, b.status_book, b.book_creator, b.book_view,
-      GROUP_CONCAT(a.article_name) AS article_names,
-      b.book_imagedata
-      FROM book b
-      JOIN article a ON b.book_id = a.book_id
-      WHERE b.status_book IN ('published', 'deny')
-      GROUP BY b.book_id, b.book_name, b.status_book, b.book_imagedata, b.book_view;`,
+    `SELECT b.article_id, b.article_name, b.status_article, b.article_creator, b.article_view,
+      GROUP_CONCAT(a.section_name) AS article_names,
+      b.article_imagedata
+      FROM article b
+      JOIN article_section a ON b.article_id = a.article_id
+      WHERE b.status_article IN ('published', 'deny')
+      GROUP BY b.article_id, b.article_name, b.status_article, b.article_imagedata, b.article_view;`,
     function (err, results) {
       // check error
       if (err) {
@@ -1148,11 +1148,11 @@ app.get("/api/forapprove", function (req, res) {
         return;
       }
 
-      const bookdata = results.map((book) => {
-        const img = helper.convertBlobToBase64(book.book_imagedata);
+      const bookdata = results.map((article) => {
+        const img = helper.convertBlobToBase64(article.article_imagedata);
         return {
-          ...book,
-          book_imagedata: img,
+          ...article,
+          article_imagedata: img,
         };
       });
       // console.log(results);
@@ -1166,11 +1166,11 @@ app.get("/api/notification", function (req, res) {
   const email = req.query.user_email;
 
   connection.query(
-    `SELECT f.request_id, b.book_name, a.article_id, a.article_name, a.article_imagedata, f.status, f.request_comment, f.created_at
-    FROM book b
-    INNER JOIN article a ON b.book_id = a.book_id
-    INNER JOIN forrequest f ON b.book_id = f.book_id AND a.article_id = f.article_id
-    WHERE b.book_creator = ?
+    `SELECT f.request_id, b.article_name, a.section_id, a.section_name, a.section_imagedata, f.status, f.request_comment, f.created_at
+    FROM article b
+    INNER JOIN article_section a ON b.article_id = a.article_id
+    INNER JOIN forrequest f ON b.article_id = f.article_id AND a.section_id = f.section_id
+    WHERE b.article_creator = ?
     ORDER BY f.created_at DESC`,
     [email],
     function (err, results) {
@@ -1179,11 +1179,11 @@ app.get("/api/notification", function (req, res) {
         res.json([]);
         return;
       }
-      const articledata = results.map((article) => {
-        const img = helper.convertBlobToBase64(article.article_imagedata);
+      const articledata = results.map((article_section) => {
+        const img = helper.convertBlobToBase64(article_section.section_imagedata);
         return {
-          ...article,
-          article_imagedata: img,
+          ...article_section,
+          section_imagedata: img,
         };
       });
       // console.log(articledata);
@@ -1195,11 +1195,11 @@ app.get("/api/notification", function (req, res) {
 
 app.post("/api/updateStatusBook/:bookId", (req, res) => {
   const bookId = req.params.bookId;
-  const { status_book } = req.body;
+  const { status_article } = req.body;
 
   connection.query(
-    "UPDATE book SET status_book = ? WHERE book_id = ?",
-    [status_book, bookId],
+    "UPDATE article SET status_article = ? WHERE article_id = ?",
+    [status_article, bookId],
     (err, results) => {
       if (err) {
         console.error(err);
@@ -1216,11 +1216,11 @@ app.post("/api/updateStatus", (req, res) => {
   // console.log("newStatus : " + newStatus);
   // console.log("unpublishReason : " + unpublishReason);
 
-  const bookQuery = "UPDATE book SET status_book = ? WHERE book_id = ?";
+  const bookQuery = "UPDATE article SET status_article = ? WHERE article_id = ?";
   connection.query(bookQuery, [newStatus, bookId], (bookErr) => {
     if (bookErr) {
-      console.error("Error updating book status: " + bookErr);
-      res.status(500).json({ error: "Failed to update book status" });
+      console.error("Error updating article status: " + bookErr);
+      res.status(500).json({ error: "Failed to update article status" });
       return;
     }
     // console.log("bookId : " + bookId);
@@ -1228,9 +1228,9 @@ app.post("/api/updateStatus", (req, res) => {
 
     // Check if newStatus is "published" or "deny" and there's an unpublishReason
     if (newStatus === "published" || newStatus === "deny") {
-      // Check if there are matching rows in the article table
+      // Check if there are matching rows in the article_section table
       const checkArticleQuery =
-        "SELECT article_id FROM article WHERE book_id = ?";
+        "SELECT section_id FROM article_section WHERE article_id = ?";
       connection.query(
         checkArticleQuery,
         [bookId],
@@ -1248,10 +1248,10 @@ app.post("/api/updateStatus", (req, res) => {
           if (results.length > 0) {
             // If matching articles found, insert into forrequest
             const forRequestQuery =
-              "INSERT INTO forrequest (book_id, article_id, request_comment, status) VALUES (?, ?, ?, ?)";
+              "INSERT INTO forrequest (article_id, section_id, request_comment, status) VALUES (?, ?, ?, ?)";
             connection.query(
               forRequestQuery,
-              [bookId, results[0].article_id, unpublishReason, newStatus],
+              [bookId, results[0].section_id, unpublishReason, newStatus],
               (forRequestErr) => {
                 if (forRequestErr) {
                   console.error(
@@ -1274,7 +1274,7 @@ app.post("/api/updateStatus", (req, res) => {
         }
       );
     } else {
-      // If no unpublishReason or other newStatus, just update the book status
+      // If no unpublishReason or other newStatus, just update the article status
       res.json({ message: "Status updated successfully" });
     }
   });
@@ -1282,12 +1282,12 @@ app.post("/api/updateStatus", (req, res) => {
 
 app.get("/api/allbookarticleadmin", function (req, res) {
   connection.query(
-    `SELECT book.book_id, book.book_name, book.book_detail, book.book_image,book.book_imagedata, book.book_creator, book.status_book,
-            GROUP_CONCAT(article.article_name) AS article_name
-    FROM book
-    LEFT JOIN article ON book.book_id = article.book_id
-    GROUP BY book.book_id, book.book_name, book.book_detail, book.book_image, book.book_creator, book.status_book`,
-    // ,book.book_imagedata
+    `SELECT article.article_id, article.article_name, article.article_detail, article.article_image,article.article_imagedata, article.article_creator, article.status_article,
+            GROUP_CONCAT(article_section.section_name) AS section_name
+    FROM article
+    LEFT JOIN article_section ON article.article_id = article_section.article_id
+    GROUP BY article.article_id, article.article_name, article.article_detail, article.article_image, article.article_creator, article.status_article`,
+    // ,article.article_imagedata
     function (err, results) {
       if (err) {
         console.error(err);
@@ -1295,26 +1295,26 @@ app.get("/api/allbookarticleadmin", function (req, res) {
         return;
       }
 
-      const uniqueBooks = {}; // Store unique books by book_id
+      const uniqueBooks = {}; // Store unique books by article_id
 
       results.forEach((row) => {
-        const book_id = row.book_id;
-        const img = helper.convertBlobToBase64(row.book_imagedata);
-        if (!uniqueBooks[book_id]) {
-          uniqueBooks[book_id] = {
-            book_id: book_id,
-            book_name: row.book_name,
-            book_detail: row.book_detail,
-            book_image: row.book_image,
-            book_imagedata: img,
-            book_creator: row.book_creator,
-            status_book: row.status_book,
-            article_name: [],
+        const article_id = row.article_id;
+        const img = helper.convertBlobToBase64(row.article_imagedata);
+        if (!uniqueBooks[article_id]) {
+          uniqueBooks[article_id] = {
+            article_id: article_id,
+            article_name: row.article_name,
+            article_detail: row.article_detail,
+            article_image: row.article_image,
+            article_imagedata: img,
+            article_creator: row.article_creator,
+            status_article: row.status_article,
+            section_name: [],
           };
         }
-        // Add the article_name to the book's article_name array
-        if (row.article_name) {
-          uniqueBooks[book_id].article_name.push(row.article_name);
+        // Add the section_name to the article's section_name array
+        if (row.section_name) {
+          uniqueBooks[article_id].section_name.push(row.section_name);
         }
       });
 
@@ -1329,15 +1329,15 @@ app.get("/api/allexamcreator", function (req, res) {
   const email = req.query.user_email;
 
   connection.query(
-    `SELECT b.book_id, b.book_name, a.article_name, a.article_images,
+    `SELECT b.article_id, b.article_name, a.section_name, a.section_images,
     GROUP_CONCAT(DISTINCT e.exam_id)
-        FROM book b
-        LEFT JOIN article a ON a.book_id = b.book_id
-      LEFT JOIN exams e ON e.book_id = b.book_id AND e.article_id = a.article_id
+        FROM article b
+        LEFT JOIN article_section a ON a.article_id = b.article_id
+      LEFT JOIN exams e ON e.article_id = b.article_id AND e.section_id = a.section_id
         LEFT JOIN questions q ON q.exam_id = e.exam_id
-      WHERE b.book_creator = ? AND e.exam_id IS NOT NULL
-      GROUP BY a.article_id
-        HAVING COUNT(DISTINCT a.article_id) = 1;`,
+      WHERE b.article_creator = ? AND e.exam_id IS NOT NULL
+      GROUP BY a.section_id
+        HAVING COUNT(DISTINCT a.section_id) = 1;`,
     [email],
     function (err, results) {
       if (err) {
@@ -1346,24 +1346,24 @@ app.get("/api/allexamcreator", function (req, res) {
         return;
       }
 
-      const uniqueArticle = {}; // Store unique books by book_id
+      const uniqueArticle = {}; // Store unique books by article_id
       let exam_count = 1;
       results.forEach((row) => {
-        const article_name = row.article_name;
-        // If the book is not in the uniqueBooks object, add it
-        if (!uniqueArticle[article_name]) {
+        const section_name = row.section_name;
+        // If the article is not in the uniqueBooks object, add it
+        if (!uniqueArticle[section_name]) {
           exam_count++;
-          uniqueArticle[article_name] = {
-            book_id: row.book_id,
-            book_name: row.book_name,
-            book_creator: row.book_creator,
+          uniqueArticle[section_name] = {
+            article_id: row.article_id,
+            article_name: row.article_name,
+            article_creator: row.article_creator,
             exam_count: exam_count,
-            article_name: article_name,
-            article_imagedata: row.article_images,
+            section_name: section_name,
+            section_imagedata: row.section_images,
           };
         }
-        // Add the article_name to the book's article_name array
-        if (row.article_name) {
+        // Add the section_name to the article's section_name array
+        if (row.section_name) {
           exam_count = 1;
         }
       });
@@ -1377,15 +1377,15 @@ app.get("/api/allexamcreator", function (req, res) {
 
 app.get("/api/allexamadmin", function (req, res) {
   connection.query(
-    `SELECT b.book_id, b.book_name, a.article_name, a.article_images,
+    `SELECT b.article_id, b.article_name, a.section_name, a.section_images,
     GROUP_CONCAT(DISTINCT e.exam_id)
-        FROM book b
-        LEFT JOIN article a ON a.book_id = b.book_id
-      LEFT JOIN exams e ON e.book_id = b.book_id AND e.article_id = a.article_id
+        FROM article b
+        LEFT JOIN article_section a ON a.article_id = b.article_id
+      LEFT JOIN exams e ON e.article_id = b.article_id AND e.section_id = a.section_id
         LEFT JOIN questions q ON q.exam_id = e.exam_id
       WHERE e.exam_id IS NOT NULL
-      GROUP BY a.article_id
-        HAVING COUNT(DISTINCT a.article_id) = 1;`,
+      GROUP BY a.section_id
+        HAVING COUNT(DISTINCT a.section_id) = 1;`,
     function (err, results) {
       if (err) {
         console.error(err);
@@ -1393,23 +1393,23 @@ app.get("/api/allexamadmin", function (req, res) {
         return;
       }
 
-      const uniqueArticle = {}; // Store unique books by book_id
+      const uniqueArticle = {}; // Store unique books by article_id
       let exam_count = 1;
       results.forEach((row) => {
-        const article_name = row.article_name;
-        // If the book is not in the uniqueBooks object, add it
-        if (!uniqueArticle[article_name]) {
+        const section_name = row.section_name;
+        // If the article is not in the uniqueBooks object, add it
+        if (!uniqueArticle[section_name]) {
           exam_count++;
-          uniqueArticle[article_name] = {
-            book_id: row.book_id,
-            book_name: row.book_name,
+          uniqueArticle[section_name] = {
+            article_id: row.article_id,
+            article_name: row.article_name,
             exam_count: exam_count,
-            article_name: article_name,
-            article_imagedata: row.article_images,
+            section_name: section_name,
+            section_imagedata: row.section_images,
           };
         }
-        // Add the article_name to the book's article_name array
-        if (row.article_name) {
+        // Add the section_name to the article's section_name array
+        if (row.section_name) {
           exam_count = 1;
         }
       });
@@ -1425,7 +1425,7 @@ app.get("/api/allexamadmin", function (req, res) {
 //   const { bookid, articleid, remail, rdetail } = req.body;
 
 //   const insertReportQuery = `
-//     INSERT INTO reports (book_id, article_id, reporter, report_detail,	report_status)
+//     INSERT INTO reports (article_id, section_id, reporter, report_detail,	report_status)
 //     VALUES (?, ?, ?, ?,?)
 //   `;
 
@@ -1444,10 +1444,10 @@ app.get("/api/allexamadmin", function (req, res) {
 app.post("/api/report", (req, res) => {
   const { bookid, articleid, remail, rdetail } = req.body;
 
-  // Check if the reporter has already reported for this article
+  // Check if the reporter has already reported for this article_section
   const checkReportQuery = `
     SELECT * FROM reports
-    WHERE article_id = ? AND reporter = ? AND report_status = 'pending'
+    WHERE section_id = ? AND reporter = ? AND report_status = 'pending'
   `;
 
   connection.query(
@@ -1458,15 +1458,15 @@ app.post("/api/report", (req, res) => {
         console.error(checkErr);
         res.status(500).json({ error: "Error checking existing report" });
       } else {
-        // If the reporter has already reported for this article, send a response
+        // If the reporter has already reported for this article_section, send a response
         if (checkResult.length > 0) {
           res
             .status(400)
-            .json({ error: "Reporter has already reported for this article" });
+            .json({ error: "Reporter has already reported for this article_section" });
         } else {
           // If not, proceed to insert the new report
           const insertReportQuery = `
-          INSERT INTO reports (book_id, article_id, reporter, report_detail, report_status)
+          INSERT INTO reports (article_id, section_id, reporter, report_detail, report_status)
           VALUES (?, ?, ?, ?, ?)
         `;
 
@@ -1544,7 +1544,7 @@ app.post("/api/vocabs", async (req, res) => {
   const { articleid, Vname, Vdetail } = req.body;
 
   const insertReportQuery = `
-    INSERT INTO vocabs (article_id, vocabs_name, vocabs_detail)
+    INSERT INTO vocabs (section_id, vocabs_name, vocabs_detail)
     VALUES (?, ?, ?)
   `;
 
@@ -1568,11 +1568,11 @@ app.post("/api/vocabs", async (req, res) => {
 });
 
 app.get("/api/vocabs/:id", function (req, res) {
-  const article_id = req.params.id;
+  const section_id = req.params.id;
 
   connection.query(
-    `SELECT * FROM vocabs WHERE article_id = ?;`,
-    [article_id],
+    `SELECT * FROM vocabs WHERE section_id = ?;`,
+    [section_id],
     function (err, results) {
       res.json(results);
     }
@@ -1624,25 +1624,25 @@ app.get("/api/report", function (req, res) {
           const entry = {
             ...report,
             report_articlename: "ไม่มีข้อมูล",
-            book_id: "ไม่มีข้อมูล",
+            article_id: "ไม่มีข้อมูล",
           };
 
           connection.query(
-            `SELECT * FROM article WHERE article_id = ?;`,
-            [report.article_id],
-            (err, article) => {
+            `SELECT * FROM article_section WHERE section_id = ?;`,
+            [report.section_id],
+            (err, article_section) => {
               if (!err) {
-                entry.report_articlename = article[0]
-                  ? article[0].article_name
+                entry.report_articlename = article_section[0]
+                  ? article_section[0].section_name
                   : "ไม่มีข้อมูล";
               }
               connection.query(
-                `SELECT * FROM book WHERE book_id = ?;`,
-                [report.book_id],
-                (err, book) => {
+                `SELECT * FROM article WHERE article_id = ?;`,
+                [report.article_id],
+                (err, article) => {
                   if (!err) {
-                    entry.book_id = book[0] ? book[0].book_name : "ไม่มีข้อมูล";
-                    entry.bookid = report.book_id;
+                    entry.article_id = article[0] ? article[0].article_name : "ไม่มีข้อมูล";
+                    entry.bookid = report.article_id;
                   }
                   resolve(entry);
                 }
@@ -1670,18 +1670,18 @@ app.get("/api/report", function (req, res) {
 //           const entry = {
 //             ...report,
 //             report_articlename: "ไม่มีข้อมูล",
-//             book_id: "ไม่มีข้อมูล",
+//             article_id: "ไม่มีข้อมูล",
 //             reporter: "ไม่มีข้อมูล",
 //           };
 
-//           connection.query(`SELECT * FROM article WHERE article_id = ?;`, [report.article_id], (err, article) => {
+//           connection.query(`SELECT * FROM article_section WHERE section_id = ?;`, [report.section_id], (err, article_section) => {
 //             if (!err) {
-//               entry.report_articlename = article[0] ? article[0].article_name : "ไม่มีข้อมูล";
+//               entry.report_articlename = article_section[0] ? article_section[0].section_name : "ไม่มีข้อมูล";
 //             }
-//             connection.query(`SELECT * FROM book WHERE book_id = ?;`, [report.book_id], (err, book) => {
+//             connection.query(`SELECT * FROM article WHERE article_id = ?;`, [report.article_id], (err, article) => {
 //               if (!err) {
-//                 entry.book_id = book[0] ? book[0].book_name : "ไม่มีข้อมูล";
-//                 entry.bookid = report.book_id;
+//                 entry.article_id = article[0] ? article[0].article_name : "ไม่มีข้อมูล";
+//                 entry.bookid = report.article_id;
 //                 entry.reporter = report.reporter;  // เพิ่ม line นี้
 //               }
 //               resolve(entry);
@@ -1722,26 +1722,26 @@ app.get("/api/reportnotification", function (req, res) {
           const entry = {
             ...report,
             report_articlename: "ไม่มีข้อมูล",
-            book_id: "ไม่มีข้อมูล",
+            article_id: "ไม่มีข้อมูล",
             reporter: "ไม่มีข้อมูล",
           };
 
           connection.query(
-            `SELECT * FROM article WHERE article_id = ?;`,
-            [report.article_id],
-            (err, article) => {
+            `SELECT * FROM article_section WHERE section_id = ?;`,
+            [report.section_id],
+            (err, article_section) => {
               if (!err) {
-                entry.report_articlename = article[0]
-                  ? article[0].article_name
+                entry.report_articlename = article_section[0]
+                  ? article_section[0].section_name
                   : "ไม่มีข้อมูล";
               }
               connection.query(
-                `SELECT * FROM book WHERE book_id = ?;`,
-                [report.book_id],
-                (err, book) => {
+                `SELECT * FROM article WHERE article_id = ?;`,
+                [report.article_id],
+                (err, article) => {
                   if (!err) {
-                    entry.book_id = book[0] ? book[0].book_name : "ไม่มีข้อมูล";
-                    entry.bookid = report.book_id;
+                    entry.article_id = article[0] ? article[0].article_name : "ไม่มีข้อมูล";
+                    entry.bookid = report.article_id;
                     entry.reporter = report.reporter;
                   }
                   resolve(entry);
@@ -1792,7 +1792,7 @@ const path = require("path");
 const { error } = require("console");
 
 app.post("/api/add-data", upload.single("questionsImage"), async (req, res) => {
-  const { exam_id, book_id, article_id, total_questions, questionstext } =
+  const { exam_id, article_id, section_id, total_questions, questionstext } =
     req.body;
   const options = JSON.parse(req.body.questionsoptions);
   questionstext;
@@ -1830,10 +1830,10 @@ app.post("/api/add-data", upload.single("questionsImage"), async (req, res) => {
     );
     res.status(200).send(`${exam_id}`);
   } else {
-    const insertExamQuery = `INSERT INTO exams (book_id, article_id, total_questions) VALUES (?, ?, ?)`;
+    const insertExamQuery = `INSERT INTO exams (article_id, section_id, total_questions) VALUES (?, ?, ?)`;
     connection.query(
       insertExamQuery,
-      [book_id, article_id, total_questions],
+      [article_id, section_id, total_questions],
       (err, result) => {
         if (err) {
           console.error("Error inserting exam data: " + err.message);
@@ -1873,8 +1873,8 @@ app.post("/api/add-data", upload.single("questionsImage"), async (req, res) => {
 
 app.post("/api/editexam", upload.single("questionsImage"), async (req, res) => {
   const question_id = req.body.question_id;
-  const book_id = req.body.book_id;
   const article_id = req.body.article_id;
+  const section_id = req.body.section_id;
   const total_questions = req.body.total_questions;
   const questionstext = req.body.questionstext;
   const options = JSON.parse(req.body.questionsoptions);
@@ -1882,8 +1882,8 @@ app.post("/api/editexam", upload.single("questionsImage"), async (req, res) => {
   const correctOption = req.body.questionscorrectOption;
   const imageFile = req.file ? req.file : null; // ไฟล์รูปภาพ
   // console.log("question_id : " + question_id);
-  // console.log("book_id : " + book_id);
   // console.log("article_id : " + article_id);
+  // console.log("section_id : " + section_id);
   // console.log("total_questions : " + total_questions);
   // console.log("questionstext : " + questionstext);
   // console.log("options : " + options);
@@ -2032,7 +2032,7 @@ app.post(
     { name: "sound", maxCount: 1 },
   ]),
   async (req, res) => {
-    const book_id = req.body.book_id;
+    const article_id = req.body.article_id;
     const chapter = req.body.chapter;
     const level = req.body.level;
     const description = req.body.description;
@@ -2062,29 +2062,29 @@ app.post(
       fs.unlinkSync(soundFile.path);
     }
     connection.query(
-      "SELECT article_id FROM article ORDER BY article_id DESC LIMIT 1",
+      "SELECT section_id FROM article_section ORDER BY section_id DESC LIMIT 1",
       (err, results) => {
         if (err) {
-          console.error("Error fetching last article_id:", err);
-          res.status(500).json({ error: "Error fetching last article_id" });
+          console.error("Error fetching last section_id:", err);
+          res.status(500).json({ error: "Error fetching last section_id" });
           return;
         }
         let lastNumber = 0;
         if (results.length > 0) {
-          const lastBookId = results[0].article_id;
+          const lastBookId = results[0].section_id;
           if (lastBookId.toString().startsWith("XOL"))
             lastNumber = parseInt(lastBookId.replace("XOL", ""), 10);
         }
         const newNumber = lastNumber + 1;
         const newarticleid = `XOL${String(newNumber).padStart(3, "0")}`;
 
-        const insertOptionQuery = `INSERT INTO article 
-    (article_id ,book_id, article_name ,article_level ,article_detail  ,article_images ,article_sounds,article_imagedata ,article_sounddata) VALUES (?,?,?,?,?,?,?,?,?)`;
+        const insertOptionQuery = `INSERT INTO article_section 
+    (section_id ,article_id, section_name ,section_level ,section_detail  ,section_images ,section_sounds,section_imagedata ,section_sounddata) VALUES (?,?,?,?,?,?,?,?,?)`;
         connection.query(
           insertOptionQuery,
           [
             newarticleid,
-            book_id,
+            article_id,
             chapter,
             level,
             description,
@@ -2099,18 +2099,18 @@ app.post(
               res.status(500).send("Error creating exam Insert Id");
             } else {
               connection.query(
-                "UPDATE book SET status_book = ? WHERE book_id = ?",
-                ["published", book_id],
+                "UPDATE article SET status_article = ? WHERE article_id = ?",
+                ["published", article_id],
                 (err, updateResult) => {
                   if (err) {
-                    console.error("Error updating status_book:", err);
+                    console.error("Error updating status_article:", err);
                     res
                       .status(500)
-                      .json({ error: "Error updating status_book" });
+                      .json({ error: "Error updating status_article" });
                   } else {
                     res
                       .status(200)
-                      .send("Article added and status_book updated");
+                      .send("Article added and status_article updated");
                   }
                 }
               );
@@ -2144,19 +2144,19 @@ app.post(
     let imageByte = null;
     let soundByte = null;
     connection.query(
-      "SELECT * FROM article WHERE article_id = ?",
+      "SELECT * FROM article_section WHERE section_id = ?",
       [articleId],
       async (err, results) => {
         if (err) {
-          console.error("Error fetching article data:", err);
-          res.status(500).json({ error: "Error fetching article data" });
+          console.error("Error fetching article_section data:", err);
+          res.status(500).json({ error: "Error fetching article_section data" });
           return;
         }
-        // console.log('find article id ' + articleId);
+        // console.log('find article_section id ' + articleId);
 
         if (results.length > 0) {
           let updateValues = [chapter, description];
-          let updateQuery = `UPDATE article SET article_name=?,article_detail=?`;
+          let updateQuery = `UPDATE article_section SET section_name=?,section_detail=?`;
 
           if (imageFile) {
             imageByte = await helper.readFileAsync(imageFile.path);
@@ -2165,7 +2165,7 @@ app.post(
             await helper.writeFileAsync(img.fileName, imageByte);
             fs.unlinkSync(imageFile.path);
 
-            updateQuery += ",article_images=? ,article_imagedata=?";
+            updateQuery += ",section_images=? ,section_imagedata=?";
             updateValues.push(imagepath, imageByte);
           }
 
@@ -2176,10 +2176,10 @@ app.post(
             await helper.writeFileAsync(sod.fileName, soundByte);
             fs.unlinkSync(soundFile.path);
 
-            updateQuery += ",article_sounds=?,article_sounddata=?";
+            updateQuery += ",section_sounds=?,section_sounddata=?";
             updateValues.push(soundpath, soundByte);
           }
-          updateQuery += " WHERE article_id=?";
+          updateQuery += " WHERE section_id=?";
           updateValues.push(articleId);
 
           connection.query(
@@ -2187,8 +2187,8 @@ app.post(
             updateValues,
             async (err, updateResult) => {
               if (err) {
-                console.error("Error updating article data:", err);
-                res.status(500).json({ error: "Error updating article data" });
+                console.error("Error updating article_section data:", err);
+                res.status(500).json({ error: "Error updating article_section data" });
                 return;
               }
 
@@ -2208,15 +2208,15 @@ app.post("/api/updatebookstatus", (req, res) => {
   // console.log(bookId)
 
   const updateBookQuery = `
-    UPDATE book
-    SET status_book = 'published'
-    WHERE book_id = ?
+    UPDATE article
+    SET status_article = 'published'
+    WHERE article_id = ?
   `;
 
   connection.query(updateBookQuery, [bookId], (err, result) => {
     if (err) {
-      console.error("Error updating book status:", err);
-      res.status(500).json({ error: "Error updating book status" });
+      console.error("Error updating article status:", err);
+      res.status(500).json({ error: "Error updating article status" });
     } else {
       console.log("ถููกอัพไป", bookId);
       res.status(200).send('Book status updated to "published" successfully');
@@ -2235,8 +2235,8 @@ app.post("/api/updatebookstatus", (req, res) => {
 //    [option_id, question_id, user_id, watchedexam_at],
 //   (err, result) => {
 //     if (err) {
-//         console.error('Error adding book:', err);
-//         res.status(500).json({ error: 'Error adding book' });
+//         console.error('Error adding article:', err);
+//         res.status(500).json({ error: 'Error adding article' });
 //     } else {
 //         console.log('Book added successfully');
 //         res.status(200).json({ message: 'Book added successfully' });
@@ -2256,12 +2256,12 @@ app.post("/api/examhistory", upload.none(), (req, res) => {
   // console.log('User ID:', userId);
   // console.log('bookid ID:', bookid);
   connection.query(
-    "INSERT INTO examhistory (submittedAnswers, article_id, user_id, book_id) VALUES (?, ?, ?, ?)",
+    "INSERT INTO examhistory (submittedAnswers, section_id, user_id, article_id) VALUES (?, ?, ?, ?)",
     [submittedAnswers, articleid, userId, bookid],
     (err, result) => {
       if (err) {
-        console.error("Error adding book:", err);
-        res.status(500).json({ error: "Error adding book" });
+        console.error("Error adding article:", err);
+        res.status(500).json({ error: "Error adding article" });
       } else {
         console.log("Book added successfully");
         res.status(200).json({ message: "Book added successfully" });
