@@ -588,6 +588,7 @@ app.get("/api/getarticleban/:id", function (req, res) {
 app.get("/api/articledetail/:id", function (req, res) {
   const userId = req.query.user_id;
   const section_id = req.params.id;
+  // console.log("asdasdsd");
 
   connection.query(
     `SELECT * FROM article_section WHERE section_id = ?;`,
@@ -614,6 +615,9 @@ app.post("/api/articledetail/:id/record-history", (req, res) => {
   const userId = req.body.user_id;
   const section_id = req.params.id;
   const article_id = req.body.article_id;
+  // console.log("userId"+userId);
+  // console.log("section_id"+section_id);
+  // console.log("article_id"+article_id);
 
   if (!userId || !section_id || !article_id) {
     console.error("Invalid user ID, article_section ID, or article ID");
