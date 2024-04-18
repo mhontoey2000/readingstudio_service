@@ -289,40 +289,44 @@ app.delete("/api/deletebook/:bookId", function (req, res) {
   );
 });
 
-app.post("/api/updatebook", upload.single("article_image"), async (req, res) => {
-  const { article_id, article_name, article_detail } = req.body;
-  console.log("Received image file:", req.file);
-  let updateValues = [];
-  let updateQuery =
-    "UPDATE article SET article_name=?, article_detail=?, status_article='published' ";
+app.post(
+  "/api/updatebook",
+  upload.single("article_image"),
+  async (req, res) => {
+    const { article_id, article_name, article_detail } = req.body;
+    console.log("Received image file:", req.file);
+    let updateValues = [];
+    let updateQuery =
+      "UPDATE article SET article_name=?, article_detail=?, status_article='published' ";
 
-  updateValues.push(article_name, article_detail);
+    updateValues.push(article_name, article_detail);
 
-  if (req.file) {
-    const imageFile = req.file;
-    const imageByte = await helper.readFileAsync(imageFile.path);
-    const img = helper.generateUniqueFileName("picture");
-    const imagepath = img.pathimage;
+    if (req.file) {
+      const imageFile = req.file;
+      const imageByte = await helper.readFileAsync(imageFile.path);
+      const img = helper.generateUniqueFileName("picture");
+      const imagepath = img.pathimage;
 
-    await helper.writeFileAsync(img.fileName, imageByte);
+      await helper.writeFileAsync(img.fileName, imageByte);
 
-    updateQuery += ", article_image=?, article_imagedata=?";
-    updateValues.push(imagepath, imageByte);
-  }
-
-  updateQuery += " WHERE article_id=?";
-  updateValues.push(article_id);
-
-  connection.query(updateQuery, updateValues, (err, result) => {
-    if (err) {
-      console.error("Error update article:", err);
-      res.status(500).json({ error: "Error update article" });
-    } else {
-      console.log("Book update successfully");
-      res.status(200).json({ message: "Book update successfully" });
+      updateQuery += ", article_image=?, article_imagedata=?";
+      updateValues.push(imagepath, imageByte);
     }
-  });
-});
+
+    updateQuery += " WHERE article_id=?";
+    updateValues.push(article_id);
+
+    connection.query(updateQuery, updateValues, (err, result) => {
+      if (err) {
+        console.error("Error update article:", err);
+        res.status(500).json({ error: "Error update article" });
+      } else {
+        console.log("Book update successfully");
+        res.status(200).json({ message: "Book update successfully" });
+      }
+    });
+  }
+);
 
 app.post("/api/updateLeveltext", (req, res) => {
   const { articleId, newLevel } = req.body;
@@ -333,6 +337,7 @@ app.post("/api/updateLeveltext", (req, res) => {
       res.status(500).json({ error: "Failed to begin transaction" });
       return;
     }
+    console.log(newLevel, articleId);
 
     connection.query(
       `UPDATE article_section SET section_level = ?, status_section = ? WHERE section_id = ?`,
@@ -345,7 +350,8 @@ app.post("/api/updateLeveltext", (req, res) => {
               err
             );
             res.status(500).json({
-              error: "Failed to update article_section level and status_section",
+              error:
+                "Failed to update article_section level and status_section",
             });
           });
         } else {
@@ -420,11 +426,14 @@ app.post("/api/addbook", upload.single("article_image"), async (req, res) => {
       let lastNumber = 0;
       if (results.length > 0) {
         const lastBookId = results[0].article_id;
-        lastNumber = parseInt(lastBookId.replace("article", ""), 10);
+        // lastNumber = parseInt(lastBookId.replace("article", ""), 10);
+
+        const findNumberOnly = lastBookId.replace(/[a-z A-Z]/g, "");
+        lastNumber = parseInt(findNumberOnly, 10);
       }
 
       const newNumber = lastNumber + 1;
-      const article_id = `article${String(newNumber).padStart(3, "0")}`;
+      const article_id = `book${String(newNumber).padStart(3, "0")}`;
 
       connection.query(
         "INSERT INTO article (article_id, article_name, article_detail, article_image, article_imagedata, article_creator, status_article) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -528,7 +537,9 @@ app.delete("/api/deletearticle/:articleId", function (req, res) {
         res.status(500).json({ error: "Error removed article_section" });
       } else {
         console.log("removed article_section successfully");
-        res.status(200).json({ message: "removed article_section successfully" });
+        res
+          .status(200)
+          .json({ message: "removed article_section successfully" });
       }
     }
   );
@@ -547,7 +558,9 @@ app.get("/api/article_section/:id", function (req, res) {
       }
 
       const articlesWithImages = results.map((article_section) => {
-        const img = helper.convertBlobToBase64(article_section.section_imagedata);
+        const img = helper.convertBlobToBase64(
+          article_section.section_imagedata
+        );
         return {
           ...article_section,
           section_imagedata: img,
@@ -573,7 +586,9 @@ app.get("/api/getarticleban/:id", function (req, res) {
       }
 
       const articlesWithImages = results.map((article_section) => {
-        const img = helper.convertBlobToBase64(article_section.section_imagedata);
+        const img = helper.convertBlobToBase64(
+          article_section.section_imagedata
+        );
         return {
           ...article_section,
           section_imagedata: img,
@@ -600,7 +615,9 @@ app.get("/api/articledetail/:id", function (req, res) {
         return;
       }
       const articlesWithImages = results.map((article_section) => {
-        const img = helper.convertBlobToBase64(article_section.section_imagedata);
+        const img = helper.convertBlobToBase64(
+          article_section.section_imagedata
+        );
         return {
           ...article_section,
           section_imagedata: img,
@@ -621,7 +638,9 @@ app.post("/api/articledetail/:id/record-history", (req, res) => {
 
   if (!userId || !section_id || !article_id) {
     console.error("Invalid user ID, article_section ID, or article ID");
-    res.status(400).json({ error: "Invalid user ID, article_section ID, or article ID" });
+    res
+      .status(400)
+      .json({ error: "Invalid user ID, article_section ID, or article ID" });
     return;
   }
   connection.query(
@@ -866,7 +885,7 @@ app.post("/api/register", upload.single("idcard"), async (req, res) => {
           console.log("============== Error checking email ==============");
           console.log(err.message);
           // res.status(500).send("Error checking email");
-          res.status(500).send('Error checking email');
+          res.status(500).send("Error checking email");
           return;
         }
 
@@ -892,7 +911,7 @@ app.post("/api/register", upload.single("idcard"), async (req, res) => {
               if (err) {
                 console.log("============== Error INSERT ==============");
                 console.log(err);
-                res.status(500).send('Error inserting user data');
+                res.status(500).send("Error inserting user data");
               } else {
                 res.send("User data inserted successfully");
               }
@@ -959,7 +978,9 @@ app.get("/api/watchedhistory", (req, res) => {
       } else {
         const articlesWithImages = result.map((article_section) => {
           // Convert blob to base64
-          const img = helper.convertBlobToBase64(article_section.section_imagedata);
+          const img = helper.convertBlobToBase64(
+            article_section.section_imagedata
+          );
           return {
             ...article_section,
             section_imagedata: img,
@@ -990,7 +1011,9 @@ app.get("/api/examhistory", (req, res) => {
         // console.log(result);
         const articlesWithImages = result.map((article_section) => {
           // Convert blob to base64
-          const img = helper.convertBlobToBase64(article_section.section_imagedata);
+          const img = helper.convertBlobToBase64(
+            article_section.section_imagedata
+          );
           return {
             ...article_section,
             section_imagedata: img,
@@ -1184,7 +1207,9 @@ app.get("/api/notification", function (req, res) {
         return;
       }
       const articledata = results.map((article_section) => {
-        const img = helper.convertBlobToBase64(article_section.section_imagedata);
+        const img = helper.convertBlobToBase64(
+          article_section.section_imagedata
+        );
         return {
           ...article_section,
           section_imagedata: img,
@@ -1220,7 +1245,8 @@ app.post("/api/updateStatus", (req, res) => {
   // console.log("newStatus : " + newStatus);
   // console.log("unpublishReason : " + unpublishReason);
 
-  const bookQuery = "UPDATE article SET status_article = ? WHERE article_id = ?";
+  const bookQuery =
+    "UPDATE article SET status_article = ? WHERE article_id = ?";
   connection.query(bookQuery, [newStatus, bookId], (bookErr) => {
     if (bookErr) {
       console.error("Error updating article status: " + bookErr);
@@ -1464,9 +1490,9 @@ app.post("/api/report", (req, res) => {
       } else {
         // If the reporter has already reported for this article_section, send a response
         if (checkResult.length > 0) {
-          res
-            .status(400)
-            .json({ error: "Reporter has already reported for this article_section" });
+          res.status(400).json({
+            error: "Reporter has already reported for this article_section",
+          });
         } else {
           // If not, proceed to insert the new report
           const insertReportQuery = `
@@ -1600,6 +1626,7 @@ app.delete("/api/vocabs/:id", function (req, res) {
     }
   );
 });
+
 app.delete("/api/report/:id", function (req, res) {
   const reportId = req.params.id;
 
@@ -1645,7 +1672,9 @@ app.get("/api/report", function (req, res) {
                 [report.article_id],
                 (err, article) => {
                   if (!err) {
-                    entry.article_id = article[0] ? article[0].article_name : "ไม่มีข้อมูล";
+                    entry.article_id = article[0]
+                      ? article[0].article_name
+                      : "ไม่มีข้อมูล";
                     entry.bookid = report.article_id;
                   }
                   resolve(entry);
@@ -1744,7 +1773,9 @@ app.get("/api/reportnotification", function (req, res) {
                 [report.article_id],
                 (err, article) => {
                   if (!err) {
-                    entry.article_id = article[0] ? article[0].article_name : "ไม่มีข้อมูล";
+                    entry.article_id = article[0]
+                      ? article[0].article_name
+                      : "ไม่มีข้อมูล";
                     entry.bookid = report.article_id;
                     entry.reporter = report.reporter;
                   }
@@ -1885,14 +1916,7 @@ app.post("/api/editexam", upload.single("questionsImage"), async (req, res) => {
   questionstext;
   const correctOption = req.body.questionscorrectOption;
   const imageFile = req.file ? req.file : null; // ไฟล์รูปภาพ
-  // console.log("question_id : " + question_id);
-  // console.log("article_id : " + article_id);
-  // console.log("section_id : " + section_id);
-  // console.log("total_questions : " + total_questions);
-  // console.log("questionstext : " + questionstext);
-  // console.log("options : " + options);
-  // console.log("correctOption : " + correctOption);
-  // console.log("questionsImage : " + imageFile);
+
   let imagepath = null;
   let imageByte = null;
   if (imageFile) {
@@ -2153,7 +2177,9 @@ app.post(
       async (err, results) => {
         if (err) {
           console.error("Error fetching article_section data:", err);
-          res.status(500).json({ error: "Error fetching article_section data" });
+          res
+            .status(500)
+            .json({ error: "Error fetching article_section data" });
           return;
         }
         // console.log('find article_section id ' + articleId);
@@ -2192,7 +2218,9 @@ app.post(
             async (err, updateResult) => {
               if (err) {
                 console.error("Error updating article_section data:", err);
-                res.status(500).json({ error: "Error updating article_section data" });
+                res
+                  .status(500)
+                  .json({ error: "Error updating article_section data" });
                 return;
               }
 
