@@ -96,8 +96,41 @@ router.get("/tbl", async (req, res, next) => {
 
 //หน้า exams
 
+app.delete("/api/exam/:id", function (req, res) {
+  const examId = req.params.id;
+  connection.query(
+    `DELETE FROM exams WHERE exam_id = ?;`,
+    [examId],
+    function (err, results) {
+      // if error
+      if (err) {
+        // จัดการข้อผิดพลาดที่เกิดขึ้น
+        console.error(err);
+        res.status(500).json({ error: "DELETE exams Error!" });
+        return;
+      }
+    }
+  );
+
+  connection.query(
+    `DELETE FROM questions WHERE exam_id = ?;`,
+    [examId],
+    function (err, result) {
+      // if error
+      if (err) {
+        // จัดการข้อผิดพลาดที่เกิดขึ้น
+        console.error(err);
+        res.status(500).json({ error: "DELETE questions Error!" });
+        return;
+      }
+
+      res.status(200).json(true);
+    }
+  );
+});
+
 app.get("/api/exam/:id", function (req, res) {
-  console.log("section_id" + req.params.id);
+  // console.log("section_id: => " + req.params.id);
   const section_id = req.params.id;
   connection.query(
     `SELECT * FROM exams WHERE exams.section_id = ?;`,
@@ -109,7 +142,6 @@ app.get("/api/exam/:id", function (req, res) {
         res.status(500).json({ error: "Internal Server Error" });
         return;
       }
-      // console.log(results);
     }
   );
   const query = `SELECT exams.*, questions.*, options.*
@@ -178,8 +210,22 @@ app.get("/api/exam/:id", function (req, res) {
     // })
   });
 });
-
 //close หน้า exam
+
+app.post("/api/options-delete", function (req, res) {
+  const optionIds = req.body.optionIds;
+  connection.query(
+    `DELETE FROM options WHERE option_id in (${optionIds});`, function (error, result) {
+      if (error) {
+        // จัดการข้อผิดพลาดที่เกิดขึ้น
+        console.error(error);
+        res.status(500).json({ error: "DELETE options Error!" });
+        return;
+      }
+
+      res.status(200).json(true);
+    });
+});
 
 //แก้เพิ่มย้ายบรรทัด ให้เรียก เก็บรูปในดาต้า
 // Multer configuration for handling file uploads
@@ -1094,7 +1140,8 @@ app.get("/api/allbookarticlecreator", function (req, res) {
     FROM article
     LEFT JOIN article_section ON article.article_id = article_section.article_id
     WHERE article.article_creator = ? 
-    GROUP BY article.article_id, article.article_name, article.article_detail, article.article_image,article.article_imagedata, article.article_creator, article.status_article`,
+    GROUP BY article.article_id, article.article_name, article.article_detail, article.article_image, article.article_creator, article.status_article`,
+    // article.article_imagedata,
     [email],
     function (err, results) {
       if (err) {
@@ -1160,7 +1207,8 @@ app.get("/api/forapprove", function (req, res) {
       FROM article b
       JOIN article_section a ON b.article_id = a.article_id
       WHERE b.status_article IN ('published', 'deny')
-      GROUP BY b.article_id, b.article_name, b.status_article, b.article_imagedata, b.article_view;`,
+      GROUP BY b.article_id, b.article_name, b.status_article, b.article_view;`,
+    // b.article_imagedata
     function (err, results) {
       // check error
       if (err) {
