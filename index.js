@@ -1793,7 +1793,7 @@ app.get("/api/report", function (req, res) {
 // });
 
 app.get("/api/reportnotification", function (req, res) {
-  connection.query(`SELECT * FROM reports`, function (err, results) {
+  connection.query(`SELECT * FROM reports ORDER BY date_time DESC`, function (err, results) {
     if (err) {
       console.log(err);
       res.status(500).json({ message: "Failed to Find Report" });
