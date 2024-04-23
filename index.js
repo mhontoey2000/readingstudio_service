@@ -857,7 +857,7 @@ app.get("/api/article/search", async (req, res) => {
   }
 });
 
-app.post("/api/login", (req, res) => {
+app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
 
   connection.query(
@@ -865,37 +865,38 @@ app.post("/api/login", (req, res) => {
     async (err, results) => {
       if (err) {
         console.error(err);
-
         res.status(500).send({ message: "Internal Server Error" });
       } else if (results.length === 0) {
         res.status(401).send({ message: "อีเมล์หรือรหัสผ่านผิด กรุณาตรวจสอบ" });
       } else {
-        if (results.length > 0) {
+        if(results.length > 0){
           const user = results[0];
-          const passwordMatch = await bcrypt.compare(
-            password,
-            user.user_password
-          );
+          const passwordMatch = await bcrypt.compare(password, user.user_password);
 
           if (passwordMatch) {
-            if (true) {
-              const accessToken = generateAccessToken({
-                user_id: user.user_id,
-              });
-              res.status(200).send({
-                accessToken: accessToken,
-                email: req.body.email,
-                user_id: user.user_id,
-              });
-            } else {
-              res.status(401).send({ message: "อีเมลยังไม่ได้รับการอนุมัติ" });
-            }
+            connection.query(
+              `UPDATE user SET last_login = NOW() WHERE user_id = ?`, [user.user_id],
+              (updateErr, updateResults) => {
+                  if (updateErr) {
+                      console.error(updateErr);
+                      res.status(500).send({ message: "Error updating last login time" });
+                  } else {
+                      const accessToken = generateAccessToken({
+                          user_id: user.user_id,
+                      });
+                      res.status(200).send({
+                          accessToken: accessToken,
+                          email: email,
+                          user_id: user.user_id,
+                      });
+                  }
+              }
+          );
           } else {
-            res
-              .status(401)
-              .send({ message: "อีเมล์หรือรหัสผ่านผิด กรุณาตรวจสอบ" });
+            res.status(401).send({ message: "อีเมล์หรือรหัสผ่านผิด กรุณาตรวจสอบ" });
           }
         }
+
       }
     }
   );
